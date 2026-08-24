@@ -1,0 +1,2 @@
+import Mathlib
+theorem cand_gal (K L : Type) [Field K] [Field L] [Algebra K L] [FiniteDimensional K L] (hgal : IsGalois K L) (hn : IsGalois K L → Normal K L) (hs : IsGalois K L → Algebra.IsSeparable K L) : (Module.finrank K L = Nat.card (L ≃ₐ[K] L)) ∧ Algebra.IsSeparable K L := by sorry

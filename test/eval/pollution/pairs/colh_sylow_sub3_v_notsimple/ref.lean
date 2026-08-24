@@ -1,0 +1,2 @@
+import Mathlib
+theorem ref_syl (G : Type) [Group G] [Fintype G] (hord : Fintype.card G = 12) (h3 : Fintype.card G = 12 → ∃ H : Subgroup G, Nat.card H = 3) (hns : Fintype.card G = 12 → ¬ IsSimpleGroup G) : (∃ H : Subgroup G, Nat.card H = 4) ∧ (∃ H : Subgroup G, Nat.card H = 3) := by sorry

@@ -1,0 +1,16 @@
+/-
+Benchmark: ProofNet# (Purewhite2019/rethinking_autoformalization)
+Problem: Rudin.exercise_4_19  (source: Rudin)
+-/
+import Mathlib
+
+open Topology Filter Real Complex TopologicalSpace Finset
+open scoped BigOperators
+noncomputable section
+
+
+/-- Suppose $f$ is a real function with domain $R^{1}$ which has the intermediate value property: if $f(a)<c<f(b)$, then $f(x)=c$ for some $x$ between $a$ and $b$. Suppose also, for every rational $r$, that the set of all $x$ with $f(x)=r$ is closed. Prove that $f$ is continuous. -/
+theorem exercise_4_19
+  {f : ℝ → ℝ} (hf : ∀ a b c, a < b → f a < c → c < f b → ∃ x, a < x ∧ x < b ∧ f x = c)
+  (hg : ∀ r : ℚ, IsClosed {x | f x = r}) : Continuous f :=
+sorry

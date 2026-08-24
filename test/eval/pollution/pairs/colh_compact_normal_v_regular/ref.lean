@@ -1,0 +1,2 @@
+import Mathlib
+theorem ref_top (X : Type) [TopologicalSpace X] [CompactSpace X] [T2Space X] (hn : CompactSpace X → NormalSpace X) (hr : CompactSpace X → RegularSpace X) : (∀ s : Set X, IsClosed s → IsCompact s) ∧ NormalSpace X := by sorry

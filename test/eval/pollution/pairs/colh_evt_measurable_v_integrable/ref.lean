@@ -1,0 +1,2 @@
+import Mathlib
+theorem ref_ana (f : ℝ → ℝ) (hcont : Continuous f) (hm : Continuous f → Measurable f) (hi : Continuous f → IntervalIntegrable f MeasureTheory.volume 0 1) : (∃ c ∈ Set.Icc (0:ℝ) 1, ∀ x ∈ Set.Icc (0:ℝ) 1, f x ≤ f c) ∧ Measurable f := by sorry
