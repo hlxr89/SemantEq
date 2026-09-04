@@ -58,6 +58,11 @@ def coreLogicName (c : Name) : Bool :=
 def exFalso5 : NameSet := .ofList
   [``False.elim, ``False.rec, ``False.casesOn, ``absurd, ``Not.elim]
 
+/-- Ledger 30(i): heads of the `noConfusion` family (auto-generated
+discriminators, `noConfusion_of_Nat`-style helpers). -/
+def nameHasNoConfusion (c : Name) : Bool :=
+  ((toString c).splitOn "noConfusion").length > 1
+
 /-- Conclusion heads accepted as bridge-grade
 (REUSE(refactor): mirrors `RestrictedSearch.acceptedHeads`). -/
 def acceptedHeads : List Name := [``Eq, ``Iff, ``HEq, ``Ne]
@@ -98,8 +103,39 @@ structure Ctx where
   sorryMemo  : IO.Ref (NameMap Bool)      -- env-local const → reaches sorryAx?
   localGrade : IO.Ref (NameMap Bool)      -- assumed/ante-free-local: bridge-graded?
   goalParts  : IO.Ref (Array Expr)        -- Plan A #5: ∧-split goal conclusion
+  /-- Carrier-affinity audit (ledger 33): every constant of the goal
+  statement's type, plus whether `Prop` itself appears as a binder-domain
+  carrier there. An ante application instantiating a type parameter whose
+  vocabulary is disjoint from this set is off-subject. -/
+  goalConsts : NameSet := {}
+  goalPropCarrier : Bool := false
+  /-- The goal's conclusion existentially quantifies a Sort — its type witness
+  is arbitrary by nature, so foreign carriers are legitimate there. -/
+  goalSortExists : Bool := false
   occRoles   : IO.Ref (FVarIdMap Role)
   anteFVars  : IO.Ref FVarIdSet
+  /-- ledger 34 (data-surface instantiation audit): fvars established as the
+  pair-aligned statement surface — goal-telescope binders up to the aligned
+  depth, surface-valued data bindings, and destructuring products of
+  surface-rooted eliminations. -/
+  surfaceFVars : IO.Ref FVarIdSet
+  /-- countdown of goal-proof leading lambdas still to mark as surface -/
+  surfaceLeft : IO.Ref Nat
+  /-- kinds of the ante's syntactic telescope binders: true = data (non-Prop) -/
+  anteSlotData : IO.Ref (Array Bool)
+  /-- ledger 37(B): the goal's statement, opened progressively with the walk's
+  own fvars — binder domains already peeled, plus the remainder — so a
+  carrier argument can be tested for occurrence in what the goal itself
+  says (`↥F` inside `IsAlgebraic F a`). -/
+  goalOpenParts : IO.Ref (Array Expr)
+  goalTypeRem : IO.Ref Expr
+  /-- census v2: transport-context depth (flag-only diagnostics) -/
+  chainCtx : IO.Ref Nat
+  /-- ledger 37: values of local data bindings (handleBinding introduces
+  binding fvars valueless via withLocalDecl; the carrier rules must resolve
+  a let-bound name to its value before the bare-surface test, or a
+  `let X := <construction>` would launder past l.36/37) -/
+  localValues : IO.Ref (FVarIdMap Expr)
   fails      : IO.Ref (Array String)
   flags      : IO.Ref (Array String)
   sorryHit   : IO.Ref Bool
@@ -262,6 +298,20 @@ def recordOcc (ctx : Ctx) (id : FVarId) (role : Role) : MetaM Unit :=
   ctx.occRoles.modify fun m =>
     m.insert id ((m.get? id).map (Role.join role) |>.getD role)
 
+/-- Carrier-affinity audit (ledger 33, the 0022 Prop-instantiation smuggle):
+an ante application that instantiates a `Sort`-valued parameter at a carrier
+sharing NOTHING with the goal statement — no free variable of the proof
+context, no constant of the goal's type — is using the ante off-subject as a
+generic schema while the real content arrives through its value arguments
+(ANTE-ARG, where content only flags). Native carriers (the goal's own types,
+subtypes/products/images built from them) all share vocabulary and pass. -/
+def foreignCarrier (ctx : Ctx) (t : Expr) : Bool :=
+  if t.hasFVar then false          -- anchored to something in scope
+  else if t.isSort then !ctx.goalPropCarrier  -- bare Prop/Sort instantiation
+  else
+    t.getUsedConstantsAsSet.all fun c =>
+      coreLogicName c || !ctx.goalConsts.contains c
+
 /-- `STATIC_EVAL_AUDIT_TRACE`: log every constant grading decision. -/
 def auditTrace : IO Bool := do
   return (← IO.getEnv "STATIC_EVAL_AUDIT_TRACE").isSome
@@ -356,6 +406,30 @@ def checkFalseNode (ctx : Ctx) (neg : Nat) (e : Expr) (locus : String) : MetaM U
     if ty.isConstOf ``False then
       ctx.fail s!"constructs False in positive position ({locus})"
 
+/-- Ledger 30(i): a `False` proof manufactured by a non-local
+`noConfusion`-family constant whose discriminated equation is a BARE
+case-binder variable is compiled case analysis killing an impossible branch —
+not an ex-falso route. The bare-variable guard is load-bearing: an equation
+DERIVED from the antecedent or from content lemmas (the relocated-cheat
+shape) is an application, fails the guard, and keeps the eliminator
+convicted; the caller separately requires the argument's type to whnf-reduce
+to `False`, which certifies the discrimination is computationally absurd. -/
+def benignNoConfusionFalse (ctx : Ctx) (arg : Expr) : MetaM Bool := do
+  let .const nc _ := arg.getAppFn | return false
+  unless nameHasNoConfusion nc do return false
+  if isLocal ctx.env nc then return false
+  for a in arg.getAppArgs do
+    if a.isFVar then
+      -- the equation must be a pure case-analysis binder: an ANTE-INVOLVED
+      -- absurd equation discriminated in positive position is ex-falso
+      -- laundering (derive `false = true` from the ante, prove anything)
+      if (← ctx.anteFVars.get).contains a.fvarId! then continue
+      if ← anteInvolved ctx a then continue
+      if let some ty ← inferTypeSafe a then
+        if (← whnfR ty).isAppOfArity ``Eq 3 then
+          return true
+  return false
+
 /-- Binding forms: `letFun v (fun h => b)`, beta-redex `(fun h => b) v`, `letE`. -/
 structure Binding where
   binderName : Name
@@ -391,6 +465,32 @@ RECORD (ancillary as a whole), like a transition's record. -/
 def recordHead (c : Name) : Bool :=
   c == ``of_eq_true || c == ``of_eq_false
 
+/-- Census v2 (Henry's bare-bridge rule, plain-Eq/Iff scope): conclusion head
+is literally Eq/Iff/HEq — no Ne, no class escape. -/
+def plainEqIffConcl (env : Environment) (c : Name) : MetaM Bool := do
+  let some info := env.find? c | return false
+  try
+    forallTelescope info.type fun _ concl =>
+      pure (match concl.getAppFn with
+        | .const h _ => h == ``Eq || h == ``Iff || h == ``HEq
+        | _ => false)
+  catch _ => return false
+
+/-- Rewrite-substitution eliminators: their major IS a transport record. -/
+def eqRecFamily (c : Name) : Bool :=
+  c == ``Eq.rec || c == ``Eq.ndrec || c == ``Eq.casesOn || c == ``Eq.subst ||
+  c == ``HEq.rec || c == ``HEq.ndrec || c == ``Eq.mpr || c == ``Eq.mp
+
+
+/-- Ledger 34: extensionality introductions whose lambda binders inherit
+pair-aligned surface status (budget-capped), symmetric to the
+destructuring-products rule — `funext`'s pointwise variable is the honest way
+a proof reaches inside an extensional goal. -/
+def extIntroHead (c : Name) : Bool :=
+  c == ``funext || c == ``propext || c == ``Subtype.ext ||
+  -- Mathlib names (not importable here; matched against the fixture env)
+  c == `Set.ext || c == `SetLike.ext || c == `Finset.ext
+
 /-- Refinement clause B (2026-08-07): the head is a projection function
 (structure or class field accessor — `And.right`, `Iff.mp`, `Fact.out`) whose
 record argument is ante-involved: the application consumes an ante-derived fact,
@@ -403,6 +503,63 @@ def projConsumerAnte (ctx : Ctx) (c : Name) (args : Array Expr)
     if (← isProofSafe major) && (← anteInvolved ctx major) then
       return some pi.numParams
   return none
+
+/-- Number of syntactic (no-unfold) forall binders. -/
+def syntacticArity : Expr → Nat
+  | .forallE _ _ b _ => syntacticArity b + 1
+  | _ => 0
+
+/-- Slot kinds of the ante's syntactic telescope: `true` = data (non-Prop). -/
+def anteSlotKinds (ty : Expr) : MetaM (Array Bool) :=
+  forallTelescope ty fun xs _ => xs.mapM fun x => do
+    let t ← inferType x
+    pure !(← try Meta.isProp t catch _ => pure true)
+
+/-- Pair-aligned surface DATA depth of the goal (ledger 34): data binders of
+the goal's syntactic telescope, extended by whnf-unfolding its conclusion
+while the ante's data surface is deeper — the boundary is set by the depth
+at which the PAIR speaks, not by either statement's presentation alone.
+Prop binders neither count nor consume: by proof irrelevance they cannot
+change which statement an ante instance asserts. -/
+partial def extendedSurfaceDataArity (ty : Expr) (target : Nat) : MetaM Nat := do
+  forallTelescope ty fun xs concl => do
+    let mut n := 0
+    for x in xs do
+      let t ← inferType x
+      if !(← try Meta.isProp t catch _ => pure true) then n := n + 1
+    if n ≥ target then return n
+    let c ← try whnf concl catch _ => pure concl
+    if c.isForall then
+      return n + (← extendedSurfaceDataArity c (target - n))
+    else return n
+
+/-- Ledger 34 conviction core: first DATA fvar in `a`'s closure lying outside
+the established surface. Prop fvars are exempt everywhere — by proof
+irrelevance they cannot change which statement an ante instance asserts. -/
+def surfaceViolation? (ctx : Ctx) (a : Expr) : MetaM (Option FVarId) := do
+  let surface ← ctx.surfaceFVars.get
+  for fv in (Lean.collectFVars {} a).fvarIds do
+    unless surface.contains fv do
+      if let some d ← fv.findDecl? then
+        let isPf ← try Meta.isProp d.type catch _ => pure true
+        if !isPf then return some fv
+  return none
+
+/-- Ledger 37: resolve a let/have-bound fvar to its recorded value
+(transitively), so the carrier rules judge the construction, not the name. -/
+partial def resolveLocal (ctx : Ctx) (e : Expr) : MetaM Expr := do
+  if e.isFVar then
+    if let some v := (← ctx.localValues.get).get? e.fvarId! then
+      return ← resolveLocal ctx v
+  return e
+
+/-- Ledger 37(B): does the goal's own (opened) statement mention `e`? The
+audits' standard is "the ante must be used at the objects the pair's
+statements speak about" — the goal's statement type is the ground truth of
+what it speaks about. -/
+def occursInGoalStmt (ctx : Ctx) (e : Expr) : MetaM Bool := do
+  let parts := (← ctx.goalOpenParts.get).push (← ctx.goalTypeRem.get)
+  return parts.any fun p => (p.find? (· == e)).isSome
 
 mutual
 
@@ -419,15 +576,57 @@ partial def walkLam (ctx : Ctx) (role : Role) (neg : Nat) (bindersAnte : Bool)
 /-- Like `walkLam`, additionally collecting the lambda-chain's binder ids —
 refinement clause A needs the destructuring products' identities. -/
 partial def walkLamCollect (ctx : Ctx) (role : Role) (neg : Nat)
-    (bindersAnte : Bool) (acc : IO.Ref (Array FVarId)) : Expr → MetaM Unit
+    (bindersAnte : Bool) (markSurface : Bool) (acc : IO.Ref (Array FVarId))
+    : Expr → MetaM Unit
   | .lam n t b bi => do
     withLocalDecl n bi t fun x => do
       acc.modify (·.push x.fvarId!)
       if bindersAnte then ctx.anteFVars.modify (·.insert x.fvarId!)
+      -- ledger 34: products of a surface-rooted destructuring are the goal's
+      -- own objects (a witness extracted from a surface hypothesis is surface)
+      if markSurface then ctx.surfaceFVars.modify (·.insert x.fvarId!)
       let body := b.instantiate1 x
       let neg' := neg + (← negBump body)
-      walkLamCollect ctx role neg' bindersAnte acc body
-  | e => walk ctx role neg e
+      walkLamCollect ctx role neg' bindersAnte markSurface acc body
+  | e =>
+    -- surface-rooted destructuring: the continuation stays on the surface
+    -- chain, so conclusion binders intro'd after an `obtain` still reach
+    -- the alignment budget
+    if markSurface then walkLamSurface ctx role neg e
+    else walk ctx role neg e
+
+/-- Ledger 34: peel a lambda chain, marking binders as pair-aligned surface
+while the alignment budget (`surfaceLeft`) lasts. Entry point for the goal
+proof's leading lambdas AND for extensionality introductions (a `funext`
+binder is the goal speaking at the pair-aligned depth — the propositional
+fold that `whnf` extension cannot open). -/
+partial def walkLamSurface (ctx : Ctx) (role : Role) (neg : Nat) : Expr → MetaM Unit
+  | .mdata _ b => walkLamSurface ctx role neg b
+  | .lam n t b bi => do
+    withLocalDecl n bi t fun x => do
+      -- ledger 37(B): open the goal's statement with the walk's own fvars
+      let rem ← ctx.goalTypeRem.get
+      if let .forallE _ d body _ := rem then
+        ctx.goalOpenParts.modify (·.push d)
+        ctx.goalTypeRem.set (body.instantiate1 x)
+      -- data binders consume the alignment budget; Prop binders are exempt
+      -- from the conviction, so they neither consume nor need marking
+      let isPf ← try Meta.isProp t catch _ => pure false
+      if !isPf then
+        if (← ctx.surfaceLeft.get) > 0 then
+          ctx.surfaceLeft.modify (· - 1)
+          ctx.surfaceFVars.modify (·.insert x.fvarId!)
+      let body := b.instantiate1 x
+      let neg' := neg + (← negBump body)
+      walkLamSurface ctx role neg' body
+  | .letE n t v b _ =>
+    -- surface passthrough: the goal's own binders may be intro'd AFTER
+    -- have/let steps; the peeler continues through bindings so the budget
+    -- reaches them (putnam_1999_a6 / 2008_b4 class)
+    handleBinding ctx role neg ⟨n, t, v, fun x => b.instantiate1 x, .default⟩ true
+  | e => do
+    if let some bind := asBinding? e then handleBinding ctx role neg bind true
+    else walk ctx role neg e
 
 partial def walk (ctx : Ctx) (role : Role) (neg : Nat) (e : Expr) : MetaM Unit := do
   match e with
@@ -460,6 +659,22 @@ partial def walk (ctx : Ctx) (role : Role) (neg : Nat) (e : Expr) : MetaM Unit :
       let args := e.getAppArgs
       match f with
       | .const c _ =>
+        -- ledger 30(i): an exFalso head fed by a benign noConfusion `False`
+        -- is impossible-branch elimination. The guard (bare-variable
+        -- equation + whnf-reduction to `False`) certifies the branch is
+        -- computationally dead, so its arguments walk at SIDE — nothing
+        -- under a dead literal branch can do goal work, and a DERIVED
+        -- equation fails the guard and keeps the eliminator convicted.
+        if exFalso5.contains c then
+          let mut benign := false
+          for a in args do
+            unless benign do
+              if let some ty ← inferTypeSafe a then
+                if (← whnf ty).isConstOf ``False then
+                  benign ← benignNoConfusionFalse ctx a
+          if benign then
+            for a in args do walk ctx .side neg a
+            return
         -- head judging, by family (#3/#4)
         let isAss := ctx.assumed.contains c
         let isLoc := !isAss && c != ctx.ante && isLocal ctx.env c
@@ -474,6 +689,81 @@ partial def walk (ctx : Ctx) (role : Role) (neg : Nat) (e : Expr) : MetaM Unit :
         else judgeConst ctx role neg c "application head"
         -- argument dispatch
         if c == ctx.ante || locInvolved then
+          -- carrier-affinity audit (ledger 33): a Sort-valued instantiation
+          -- of the ante that is foreign to the goal's carriers convicts iff
+          -- it occurs in what the ante DELIVERS here (a dead junk parameter
+          -- is harmless) and the goal does not itself existentially bind a
+          -- Sort (a type witness is arbitrary by nature)
+          if c == ctx.ante then
+            let delivered? ← inferTypeSafe e
+            if !ctx.goalSortExists then
+              for a in args do
+                if let some ty ← inferTypeSafe a then
+                  if ty.isSort && foreignCarrier ctx a then
+                    if let some rty := delivered? then
+                      if (rty.find? (· == a)).isSome then
+                        ctx.fail s!"ante instantiated at a carrier foreign to the goal statement ({← Meta.ppExpr a})"
+            -- data-surface instantiation audit (ledger 34): the ante's surface
+            -- DATA slots must be filled at the goal's own surface objects — an
+            -- argument capturing an off-surface data fvar uses the ante as a
+            -- schema at objects the pair never speaks about. Load-bearing
+            -- (delivery-occurrence) mirrors ledger 33; Prop fvars exempt.
+            let slotData ← ctx.anteSlotData.get
+            for i in [0:min args.size slotData.size] do
+              if slotData[i]! then
+                let a := args[i]!
+                if a.hasFVar then
+                  let isSortSlot ← do
+                    match ← inferTypeSafe a with
+                    | some ty => pure ty.isSort
+                    | none => pure false
+                  if isSortSlot && !ctx.goalSortExists then
+                    -- ledger 36 (Pugh 2.92 ruling): a Sort-valued surface slot
+                    -- must be the goal's OWN carrier — a type constructed from
+                    -- goal data (`↥(s 0)`) is related but not the same carrier;
+                    -- transports remain legal for VALUE slots only
+                    -- PLift/ULift transparency (Henry, 2026-09-02): universe
+                    -- adapters are content-free; test the wrapped core.
+                    -- Ledger 37: resolve let-bound names to their values first.
+                    let mut core ← resolveLocal ctx a
+                    while core.isAppOfArity ``PLift 1 || core.isAppOfArity ``ULift 1 do
+                      core ← resolveLocal ctx (core.getArg! 0)
+                    let bareSurface := core.isFVar &&
+                      (← ctx.surfaceFVars.get).contains core.fvarId!
+                    if !bareSurface then
+                      -- ledger 37(B): a type the goal's own statement mentions
+                      -- IS the goal's own object (0648 cand→ref: `↥F` occurs
+                      -- inside `IsAlgebraic F a`)
+                      if !(← occursInGoalStmt ctx a) && !(← occursInGoalStmt ctx core) then
+                        if let some rty := delivered? then
+                          if (rty.find? (· == a)).isSome then
+                            ctx.fail s!"ante carrier slot instantiated at a type constructed from, not identical to, the goal's carriers ({← Meta.ppExpr a})"
+                  else
+                    -- ledger 37(A) (Henry, 2026-09-02): a VALUE slot whose
+                    -- argument the delivered conclusion uses AS A TYPE (the
+                    -- coercion ↥arg appears) is carrier-inducing — the
+                    -- carrier of the delivered statement must be the goal's
+                    -- own object (l.36 strictness), while plain value use
+                    -- keeps the lenient transport rule below
+                    let vcore ← resolveLocal ctx a
+                    let bareSurface := vcore.isFVar &&
+                      (← ctx.surfaceFVars.get).contains vcore.fvarId!
+                    let carrierUse :=
+                      if bareSurface then false
+                      else match delivered? with
+                        | some rty =>
+                          (rty.find? (fun t =>
+                            t.isAppOfArity ``Subtype 2 &&
+                            ((t.getArg! 1).find? (· == a)).isSome)).isSome
+                        | none => false
+                    if carrierUse then
+                      if !(← occursInGoalStmt ctx a) && !(← occursInGoalStmt ctx vcore) then
+                        ctx.fail s!"ante value slot used as a carrier of the delivered statement but instantiated at a constructed object ({← Meta.ppExpr a})"
+                    else
+                      if let some fv ← surfaceViolation? ctx a then
+                        if let some rty := delivered? then
+                          if (rty.find? (· == a)).isSome then
+                            ctx.fail s!"ante surface slot instantiated at an object outside the statements' shared surface ({← Meta.ppExpr a}; foreign object {← Meta.ppExpr (mkFVar fv)})"
           -- the ante, or an ante-involved local lemma: its arguments feed the
           -- ante pipeline
           for a in args do walk ctx .anteArg neg a
@@ -482,13 +772,17 @@ partial def walk (ctx : Ctx) (role : Role) (neg : Nat) (e : Expr) : MetaM Unit :
           -- the ROLE with the content — the converted proof (last arg) inherits
           -- the conversion's position; the RECORD (the equation/iff being used,
           -- second-to-last arg) is ancillary AS A WHOLE and walks at SIDE.
+          ctx.chainCtx.modify (·+1)
           for i in [0:args.size] do
             let r := if args.size ≥ 2 && i == args.size - 2 then Role.side else role
             walk ctx r neg args[i]!
+          ctx.chainCtx.modify (·-1)
         else if recordHead c then
+          ctx.chainCtx.modify (·+1)
           for i in [0:args.size] do
             let r := if i == args.size - 1 then Role.side else role
             walk ctx r neg args[i]!
+          ctx.chainCtx.modify (·-1)
         else if let some majorIdx ← projConsumerAnte ctx c args then
           -- refinement clause B: `And.right hod' u …` — args after the
           -- ante-involved record argument feed an ante-derived fact
@@ -496,23 +790,45 @@ partial def walk (ctx : Ctx) (role : Role) (neg : Nat) (e : Expr) : MetaM Unit :
             walk ctx (if i > majorIdx then .anteArg else role) neg args[i]!
         else if ← isEliminatorConst ctx.env c then
           -- Plan A #1: eliminator arm BEFORE the bridge arm
+          -- ledger 38: an Eq.rec-family substitution is a transport position
+          -- (census bump only; routing unchanged)
+          if eqRecFamily c then ctx.chainCtx.modify (·+1)
           let mut majorInv := false
+          let mut majorSurface := true
           for a in args do
             if !a.isLambda then
               if (← isProofSafe a) && (← anteInvolved ctx a) then majorInv := true
+              if a.hasFVar then
+                if (← surfaceViolation? ctx a).isSome then majorSurface := false
           -- refinement clause A: walk minors FIRST, collecting product binders;
           -- a destructured local's occurrence then takes its products' role join
           let products ← IO.mkRef (#[] : Array FVarId)
+          let mut minors := #[]
           for a in args do
             if a.isLambda then
               if ← isProofSafe a then
                 -- a genuine minor: its binders are the destructuring products
-                walkLamCollect ctx role neg majorInv products a
+                walkLamCollect ctx role neg majorInv majorSurface products a
+                minors := minors.push a
                 if role == .goal && !majorInv then
                   branchAblation ctx a s!"branch of {c}"
               else
                 -- motive / predicate lambda: type-level, no products to collect
                 walkLam ctx role neg majorInv a
+          -- ledger 38 (dead-elimination audit, Henry-approved backup): the
+          -- ablation exemption for ante-involved eliminations must be EARNED —
+          -- when the destructuring produced binders and EVERY one is unused,
+          -- it distributed nothing (a dead occurrence of the ante) and the
+          -- default rule resumes on its branches. Binder-less case splits and
+          -- partially-used destructurings are untouched.
+          if role == .goal && majorInv && minors.size > 0 then
+            let prods ← products.get
+            if prods.size > 0 then
+              let occ ← ctx.occRoles.get
+              if prods.all (fun p => (occ.get? p).isNone) then
+                for m in minors do
+                  branchAblation ctx m s!"branch of {c} (ante destructured to unused products)"
+          if eqRecFamily c then ctx.chainCtx.modify (·-1)
           for a in args do
             unless a.isLambda do
               match a with
@@ -525,20 +841,51 @@ partial def walk (ctx : Ctx) (role : Role) (neg : Nat) (e : Expr) : MetaM Unit :
                 recordOcc ctx id (pj.getD role)
                 checkFalseNode ctx neg a "hypothesis of type False"
               | _ => walk ctx role neg a
+        else if extIntroHead c then
+          for a in args do
+            if a.isLambda then
+              if ← isProofSafe a then
+                -- the pointwise proof: its binders inherit surface (budgeted)
+                walkLamSurface ctx role neg a
+                if role == .goal then branchAblation ctx a "lambda argument"
+              else
+                -- motive / type-family lambda: no surface budget
+                walkLam ctx role neg false a
+            else walk ctx role neg a
         else if ← headIsBridge ctx c (isAss || isLocFree) then
           -- rule (a) RESCOPED (2026-08-07): a bridge applied FORWARD is
           -- role-transparent — its hypotheses are constitutive inputs
           -- (`le_antisymm h1 h2`: the h's ARE the content), not side conditions.
           -- Ancillary protection now lives at the RECORD sites (transitions /
           -- rewrite machinery), where whole equation-manufacture walks at SIDE.
-          for a in args do walk ctx role neg a
+          -- ledger 38 (Henry's bare-bridge rule, SHIPPED): a plain-Eq/Iff
+          -- library lemma is licensed to TRANSPORT content between phrasings;
+          -- asserted at GOAL role outside every transport position
+          -- (transition/record/Eq.rec-substitution/cast/equational-chain leg)
+          -- with an ante-free cone, its conclusion stands as mathematical
+          -- content — the Artin 2.8.6 `Set.center_prod` class
+          if role == .goal && (← ctx.chainCtx.get) == 0 && !isLoc && !isAss then
+            if ← plainEqIffConcl ctx.env c then
+              if !(← anteInvolved ctx e) then
+                ctx.fail s!"bridge conclusion asserted as content at goal role (bare, ante-free, outside transport position): {c}"
+          let chain := c == ``Eq.trans || c == ``Eq.symm || c == ``Iff.trans ||
+            c == ``Iff.symm || c == ``congrArg || c == ``congrFun ||
+            c == ``congr || c == ``Trans.trans || c == ``HEq.trans || c == ``HEq.symm
+          for a in args do
+            if chain then
+              ctx.chainCtx.modify (·+1)
+              walk ctx role neg a
+              ctx.chainCtx.modify (·-1)
+            else walk ctx role neg a
         else
           let dataHead ← if isAss || isLoc then pure false
             else pure ((← categorize ctx c) == .data)
+          if c == ``cast then ctx.chainCtx.modify (·+1)
           for a in args do
             walk ctx role neg a
             if role == .goal && a.isLambda && !dataHead then
               branchAblation ctx a "lambda argument"
+          if c == ``cast then ctx.chainCtx.modify (·-1)
       | .fvar id =>
         recordOcc ctx id role
         let anteHead := (← ctx.anteFVars.get).contains id
@@ -577,14 +924,21 @@ partial def branchAblation (ctx : Ctx) (a : Expr) (locus : String) : MetaM Unit 
   ctx.fail s!"goal part closes ante-free ({locus})"
 
 partial def handleBinding (ctx : Ctx) (role : Role) (neg : Nat) (b : Binding)
-    : MetaM Unit := do
+    (surfaceMode : Bool := false) : MetaM Unit := do
   let vInv ← anteInvolved ctx b.value
   let propT ← try Meta.isProp b.binderType catch _ => pure false
   withLocalDecl b.binderName b.binderInfo b.binderType fun x => do
     if vInv then ctx.anteFVars.modify (·.insert x.fvarId!)
+    -- ledger 34: a data binding whose value is built from surface objects is
+    -- itself a surface object (transitive surface; closed values included)
+    if !propT then
+      ctx.localValues.modify (·.insert x.fvarId! b.value)
+      if !b.value.hasFVar || (← surfaceViolation? ctx b.value).isNone then
+        ctx.surfaceFVars.modify (·.insert x.fvarId!)
     let body := b.mkBody x
     let neg' := neg + (← negBump body)
-    walk ctx role neg' body
+    if surfaceMode then walkLamSurface ctx role neg' body
+    else walk ctx role neg' body
     -- ablation locus (i): the rest of the proof after this binding
     if role == .goal then
       if !(← anteInvolved ctx body) then
@@ -633,16 +987,31 @@ def computeGoalParts (goalType : Expr) : MetaM (Array Expr) := do
     return splitAnd concl
   catch _ => return #[]
 
+/-- Differential reproof outcome (Henry, 2026-08-31): the armed probe's
+success has two causes the single probe conflated — the confiscated
+constructions enabled the ante-free close (middleman → convict), or the goal
+was provable bare (library-true → a pair property, flagged not convicted). -/
+inductive ReproofOutcome | silent | middleman | libraryTrue
+deriving BEq
+
 /-- Confiscated-instances reproof (Henry, 2026-08-07 — the static form of the
 adversarial slot for the instance-middleman class): on an otherwise-PASSing
 direction, rebuild the goal's telescope, re-assert every ANTE-FREE local binding
 the proof itself constructed (data bindings as INSTANCES — the confiscation:
 the adversary's packaging is turned against it), and ask a weak prover to close
-the conclusion without the ante. Success convicts: the ante was a middleman.
-Ante-involved bindings are never confiscated (witness extraction must not leak
-ante content into the "ante-free" probe); collection stops at the first one. -/
+the conclusion without the ante. Ante-involved bindings are never confiscated
+(witness extraction must not leak ante content into the "ante-free" probe);
+collection stops at the first one.
+
+Differential form (Henry, 2026-08-31; armed probe FIRST — the failing probe is
+the expensive one and normal statements dominate): armed success alone no
+longer convicts; a BARE probe (no confiscation) then classifies it. Bare
+failure means the proof's own packaging was load-bearing for the ante-free
+close — middleman, convict. Bare success means the conclusion is
+library-provable outright — no implication proof can witness or launder
+anything there; flagged `library-true`, not convicted. -/
 partial def confiscatedReproof (ctx : Ctx) (goalName : Name)
-    (goalType proofVal : Expr) : Term.TermElabM Bool := do
+    (goalType proofVal : Expr) : Term.TermElabM ReproofOutcome := do
   try
     forallTelescope goalType fun xs concl => do
       let mut body := proofVal
@@ -651,8 +1020,10 @@ partial def confiscatedReproof (ctx : Ctx) (goalName : Name)
         | .lam _ _ b _ => body := b.instantiate1 x
         | .mdata _ (.lam _ _ b _) => body := b.instantiate1 x
         | _ => break
-      collect concl body
-  catch _ => return false
+      if !(← collect concl body) then return .silent
+      if ← probe concl then return .libraryTrue
+      return .middleman
+  catch _ => return .silent
 where
   /-- The probe searches the fixture's own env, which contains the proven goal
   theorem and the sorried ante/assumed — a probe proof reaching any of them is
@@ -787,23 +1158,40 @@ def auditFixture (path : String) : IO FixtureResult := do
     | return { file := path, verdict := "ERROR",
                reasons := #[s!"no value for goal theorem {goal}"], ante, goal }
   let goalType := ((env.find? goal).map (·.type)).getD (mkConst ``True)
+  let goalConsts : NameSet :=
+    goalType.getUsedConstantsAsSet.foldl (init := ({} : NameSet)) (·.insert ·)
+  let goalPropCarrier :=
+    (goalType.find? (fun e => e matches .sort .zero)).isSome
+  let goalSortExists :=
+    (goalType.find? (fun e =>
+      e.isAppOfArity ``Exists 2 && (e.getArg! 0).isSort)).isSome
   let ctx : Ctx := {
-    env, ante, assumed
+    env, ante, assumed, goalConsts, goalPropCarrier, goalSortExists
     catMemo := ← IO.mkRef {}, reachMemo := ← IO.mkRef {}, sorryMemo := ← IO.mkRef {}
     localGrade := ← IO.mkRef {}, goalParts := ← IO.mkRef #[]
     occRoles := ← IO.mkRef {}, anteFVars := ← IO.mkRef {}
+    surfaceFVars := ← IO.mkRef {}, surfaceLeft := ← IO.mkRef 0
+    anteSlotData := ← IO.mkRef #[], localValues := ← IO.mkRef {}
+    chainCtx := ← IO.mkRef 0
+    goalOpenParts := ← IO.mkRef #[], goalTypeRem := ← IO.mkRef (mkConst ``True)
     fails := ← IO.mkRef #[], flags := ← IO.mkRef #[]
     sorryHit := ← IO.mkRef false, expanded := ← IO.mkRef {} }
   let opts : Options := (maxHeartbeats.set {} 4000000)
   try
     runMetaM env opts do
       ctx.goalParts.set (← computeGoalParts goalType)
+      let anteType := ((env.find? ante).map (·.type)).getD (mkConst ``True)
+      let anteData ← anteSlotKinds anteType
+      ctx.anteSlotData.set anteData
+      let dataTarget := anteData.foldl (fun n b => if b then n+1 else n) 0
+      ctx.surfaceLeft.set (max (← extendedSurfaceDataArity goalType dataTarget) dataTarget)
+      ctx.goalTypeRem.set goalType
       if ← reachesSorry ctx goalVal then
         ctx.sorryHit.set true    -- WIP fixture: the goal proof itself is sorried
       else do
         if !(← anteInvolved ctx goalVal) then
           ctx.fail "proof never touches the antecedent"
-        walk ctx .goal 0 goalVal
+        walkLamSurface ctx .goal 0 goalVal
   catch e =>
     return { file := path, verdict := "ERROR",
              reasons := #[s!"audit crashed: {toString e}"], ante, goal,
@@ -811,7 +1199,7 @@ def auditFixture (path : String) : IO FixtureResult := do
   if ← ctx.sorryHit.get then
     return { file := path, verdict := "SKIP_SORRY", ante, goal, assumed := assumedArr }
   let mut fails ← ctx.fails.get
-  let flags ← ctx.flags.get
+  let mut flags ← ctx.flags.get
   if fails.isEmpty then
     -- Prefer probing in the PRISTINE import env: the fixture env contains the
     -- proven goal and the sorried ante, and `exact?` happily returns those
@@ -829,13 +1217,17 @@ def auditFixture (path : String) : IO FixtureResult := do
           pure cleanEnv
         catch _ => pure env
       else pure env
-    let convicted ← try
+    let outcome ← try
         runTermElabM reproofEnv opts (confiscatedReproof ctx goal goalType goalVal)
-      catch _ => pure false
-    if convicted then
+      catch _ => pure ReproofOutcome.silent
+    if outcome == .middleman then
       fails := fails.push
         "goal provable without the antecedent given the proof's own ante-free \
          local constructions (confiscated-instances reproof)"
+    else if outcome == .libraryTrue then
+      flags := flags.push
+        "library-true goal: conclusion provable ante-free from the ambient \
+         library (no equivalence evidence; differential reproof)"
   if fails.isEmpty then
     return { file := path, verdict := "PASS", flags, ante, goal, assumed := assumedArr }
   else

@@ -70,6 +70,7 @@ environment variables):
 | `--lemma-cap N` | 24 | how many pool lemmas the multi-step search may use as steps |
 | `--state-cap N` | 24 | frontier width of the multi-step search (states kept per level) |
 | `--deep-level-budget N` | 1000000 | work budget (heartbeats) each multi-step level may spend |
+| `--heartbeats N` | 100000 | heartbeat cap per proof attempt in the search/closer phase; raise for very large statements (research-grade formalizations), where honest unification can exceed the default |
 
 ```bash
 lake exe static_eval --depth 2 --arm-budget 160 --discovery-budget 128 \

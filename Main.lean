@@ -14,7 +14,8 @@ private def setNat (name : String) (v : String) (act : Nat → IO Unit) : IO Uni
   | none => IO.eprintln s!"ignoring non-numeric {name} {v}"
 
 -- Search-strength CLI flags (2026-08-22): --depth, --arm-budget,
--- --discovery-budget, --lemma-cap, --state-cap, --deep-level-budget — each
+-- --discovery-budget, --lemma-cap, --state-cap, --deep-level-budget,
+-- --heartbeats — each
 -- equivalent to its STATIC_EVAL_* env var (flags win). Consumed from the
 -- front of the arg list before mode dispatch.
 def consumeFlags : List String → IO (List String)
@@ -30,6 +31,8 @@ def consumeFlags : List String → IO (List String)
     setNat "--discovery-budget" v StaticEval.discoveryBudgetRef.set; consumeFlags rest
   | "--deep-level-budget" :: v :: rest => do
     setNat "--deep-level-budget" v StaticEval.deepLevelBudgetRef.set; consumeFlags rest
+  | "--heartbeats" :: v :: rest => do
+    setNat "--heartbeats" v StaticEval.searchHeartbeatsRef.set; consumeFlags rest
   | rest => return rest
 
 def main (rawArgs : List String) : IO UInt32 := do
@@ -65,5 +68,5 @@ def main (rawArgs : List String) : IO UInt32 := do
     return 0
   | _ =>
     IO.eprintln "usage: static_eval [strength flags] <pairs.jsonl> [out.jsonl] | --proof <fixture.lean|dir>... | --dump-pack-index <out.json>"
-    IO.eprintln "  strength flags: --depth N --arm-budget N --discovery-budget N --lemma-cap N --state-cap N --deep-level-budget N (= STATIC_EVAL_* env vars)"
+    IO.eprintln "  strength flags: --depth N --arm-budget N --discovery-budget N --lemma-cap N --state-cap N --deep-level-budget N --heartbeats N (= STATIC_EVAL_* env vars)"
     return 1

@@ -162,6 +162,7 @@ def processPair (p : PairInput) : IO Json := do
       | _, none => verdict := "CandidateNoStatement"
       | some refIso, some candIso =>
       let ctx ← buildBranchedContext refSrc candSrc refIso.startPos candIso.startPos
+        (candIsoName := candIso.fullName)
       match ctx.envA?, ctx.envB?, ctx.envFull? with
       | _, _, none | _, none, _ | none, _, _ =>
         verdict := "ContextMergeError"

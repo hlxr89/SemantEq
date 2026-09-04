@@ -28,10 +28,13 @@ an indented `by` block (inline `by {script}` breaks the layout parser). -/
 def tryScriptVerbose (goalType : Expr) (script : String)
     : Term.TermElabM (Except String Expr) := do
   let indented := String.intercalate "\n" ((script.splitOn "\n").map ("  " ++ ·))
-  match Parser.runParserCategory (← getEnv) `term s!"by\n{indented}" with
+  let src := s!"by\n{indented}"
+  match Parser.runParserCategory (← getEnv) `term src with
   | .error e => return .error s!"PARSE: {e}"
   | .ok stx =>
     try
+      -- fileMap aligned with the parsed string (ledger 29; see tryScript)
+      withTheReader Core.Context (fun c => { c with fileMap := .ofString src }) do
       Term.withoutErrToSorry do
         let proof ← Term.elabTermEnsuringType stx goalType
         Term.synthesizeSyntheticMVarsNoPostponing
@@ -160,6 +163,7 @@ def replayPair (pid : String) (tasks : Array ReplayTask) : IO (Array Json) := do
       match refIso?, candIso? with
       | some refIso, some candIso =>
         let ctx ← buildBranchedContext refSrc candSrc refIso.startPos candIso.startPos
+          (candIsoName := candIso.fullName)
         match ctx.envA?, ctx.envB?, ctx.envFull? with
         | some envA, some envB, some env =>
           let refStmt? ← lastStatement? env (ns? := refNamespace)

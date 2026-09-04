@@ -1149,6 +1149,38 @@ the e-match adapter instead of `forwardInstantiate`. Bridge count from
 def enableEMatchForward : IO Bool := do
   return (← IO.getEnv "STATIC_EVAL_EMATCH_FWD").isSome
 
+/-- **And-split** (`STATIC_EVAL_AND_SPLIT`, 2026-08-26, Henry's call). A conjunctive goal handed WHOLE to
+`solveByElim` makes it search for one term proving all conjuncts at once — the
+choice space is the product, so a five-fold conclusion is unreachable at any
+budget (measured on synth:order:G1: 0/2 closes at 8x heartbeats, 25 min).
+Splitting first turns one deep search into independent shallow ones, each
+matching a hypothesis directly, each with its own rollback.
+
+The M4.4/transport branch of `structuralCore` has always done this (its
+comment: "a connective-headed goal cannot fall to blind search … split FIRST,
+so the deep solvers only ever run on atoms") — but that branch is off, so the
+D4 path has never had it. This toggle gives D4 the same move, restricted to
+`And`: splitting an `↔` means proving two implications separately, which is
+proof work rather than carrying one phrasing into another (Henry, 2026-08-26),
+so `Iff` stays unsplit here even though the transport path splits it.
+
+Default ON since 2026-08-26 (Henry): measured with the gate's rescue fix in
+place — recall_fast 24/29 with ZERO verdict diffs and -5.6% summed pair time,
+pollution 0 FP / 6-6 controls / 0 diffs, traps 0 FP / 0 diffs. Set
+`STATIC_EVAL_AND_SPLIT=0` to restore the un-split D4 body.
+
+NOTE for anyone measuring this again: the split also strengthens the ante-free
+prober INSIDE the essential-use gate, which is a pollution detector defined by
+what the prover can do. Before the rescue fix it therefore converted
+`equiv:Compfiles:Imo1960P1` into a pollution refusal (the gate correctly
+noticed a decidable conjunct). Prover improvements are not monotone in recall
+while that coupling stands. -/
+def enableAndSplit : IO Bool := do
+  match ← IO.getEnv "STATIC_EVAL_AND_SPLIT" with
+  | some "0" => return false
+  | some _   => return true
+  | none     => return true
+
 def ematchK : IO Nat := do
   match ← IO.getEnv "STATIC_EVAL_EMATCH_K" with
   | some s => return s.toNat?.getD 8
@@ -1349,7 +1381,17 @@ partial def structuralCore (lemmas : List Name) (g : MVarId) (depth : Nat := 1)
     -- apply-hypothesis-and-recurse. This is what the M4.3 recall/precision
     -- numbers were measured against; do not "improve" it without re-measuring.
     let mut d4out := []
+    let andSplit ← enableAndSplit
     for gg in goals do
+      -- And-split FIRST when enabled (see `enableAndSplit`): the deep solvers
+      -- then only ever run on atoms. Rolls back wholesale on failure, so the
+      -- ordinary path below is reached with the goal untouched.
+      if andSplit then
+        let isAnd ← try
+            pure ((← whnfR (← gg.getType)).getAppFn.constName?.getD .anonymous == ``And)
+          catch _ => pure false
+        if isAnd then
+          if ← andSplitThenRecurse lemmas gg depth then continue
       let closed ← try
         pure (← structuralSolve lemmas [gg]).isEmpty
       catch _ => pure false
@@ -1429,6 +1471,45 @@ partial def structuralCore (lemmas : List Name) (g : MVarId) (depth : Nat := 1)
     if closed then continue
     out := out ++ [gg]
   return out
+
+/-- And-only split for the D4 path (`enableAndSplit`). Unlike
+`splitThenRecurse` this passes the SAME `depth` to the recursive
+`structuralCore`: `And.intro` strictly decreases goal size, so nesting
+terminates on the conjunction's own structure and must not consume the
+apply-hypothesis recursion budget — otherwise a 5-fold conclusion at the
+shipped `depth := 1` would split once and hand the 4-fold remainder back to
+blind search, which is the very failure this fixes. `enrich := false`: the
+variants/instantiations were asserted into the context by the top-level call
+and persist, so leaves must not regenerate them. All-or-nothing rollback. -/
+partial def andSplitThenRecurse (lemmas : List Name) (g : MVarId) (depth : Nat)
+    : MetaM Bool := do
+  unless (← whnfR (← g.getType)).getAppFn.constName?.getD .anonymous == ``And do
+    return false
+  let trace := (← IO.getEnv "STATIC_EVAL_TRACE").isSome
+  let st ← saveState
+  let ok ← try
+    let subs ← g.applyConst ``And.intro
+    if trace then
+      IO.eprintln s!"[and-split] fired on: {← Meta.ppExpr (← instantiateMVars (← g.getType))}"
+    let mut all := true
+    let mut idx := 0
+    for sub in subs do
+      let (_, sub') ← sub.intros
+      idx := idx + 1
+      let left ← structuralCore lemmas sub' depth (enrich := false)
+      if trace then
+        IO.eprintln s!"[and-split]   subgoal {idx}: {if left.isEmpty then "closed" else "OPEN"}"
+        if !left.isEmpty then
+          for lg in left.take 1 do
+            IO.eprintln s!"[and-split]     residual: {← Meta.ppExpr (← instantiateMVars (← lg.getType))}"
+      unless left.isEmpty do
+        all := false
+        break
+    pure all
+  catch _ => pure false
+  if ok then return true
+  restoreState st
+  return false
 
 /-- Constructor-split an `Iff`/`And`-headed target and recursively finish each
 side after `intros` — the sides of an iff are implication goals whose
@@ -1755,8 +1836,25 @@ partial def decomposeObls (xs : Array Expr) (e : Expr) (fuel : Nat)
       -- candidate part `A → B` or `B → A` (m42-iff-split's split form) — the
       -- directions are shared content, not pollution. Never emitted for goal
       -- obligations (they would just add probe work).
-      out := out.push (← closed (← mkArrow a b) false)
-      out := out.push (← closed (← mkArrow b a) false)
+      for arr in [← mkArrow a b, ← mkArrow b a] do
+        out := out.push (← closed arr false)
+        -- 2026-08-26: DECOMPOSE the synthesized arrow too, don't stop at the
+        -- atom. The GOAL side's `isForall` branch below distributes a
+        -- hypothesis over its consequent's `∧` (emitting `∀ xs, A → cᵢ` per
+        -- conjunct); an iff-spelled ANTE stopped at the closed arrow, so the
+        -- pool held `∀ xs, cᵢ` (hypothesis-free) and `∀ xs, A → c₁ ∧ c₂ ∧ c₃`
+        -- (whole consequent) but never `∀ xs, A → cᵢ` — and
+        -- `openNonPropBinders` may not bridge that gap (stripping a Prop
+        -- domain is the nested-P4 laundering). Faithful "iff restated as two
+        -- implications" pairs therefore lost their rescue purely by SPELLING:
+        -- measured on equiv:Compfiles:Imo1960P1, where the same content is
+        -- rescued in the direction whose ante is implication-spelled and not
+        -- in the one whose ante is iff-spelled.
+        -- Risk direction (per this function's docstring): more patterns =>
+        -- rescue MORE => reject FEWER — recall-positive, precision-exposed,
+        -- so pollution + traps are mandatory for this change.
+        let (ps, _) ← decomposeObls xs arr (fuel - 1) directional
+        out := out ++ ps
     return (out, true)
   | ``Exists, #[_, lam] =>
     if lam.isLambda then
@@ -2574,53 +2672,75 @@ def restrictedSearch (goalType : Expr) (ante : Name) (exactMode : Bool)
     let root := (← mkFreshExprMVar goalType).mvarId!
     let (_, goal) ← root.intros
     let cfg : ApplyConfig := { allowSynthFailures := true }
+    if (← IO.getEnv "STATIC_EVAL_TRACE").isSome then
+      let ctx ← readThe Core.Context
+      let now ← IO.getNumHeartbeats
+      IO.eprintln s!"[exact?] scope: init={ctx.initHeartbeats} max={ctx.maxHeartbeats} now={now} spent={now - ctx.initHeartbeats}"
     let shouldAbort ← mkHeartbeatCheck leavePercentHeartbeats
-    let sideTactic := fun goals => structuralSolve (structuralSolveLemmas ante) goals
-    -- re-implemented body of the private `librarySearchLemma`
-    let act : Candidate → MetaM (List MVarId) := fun ((goal, mctx), (name, mod)) => do
-      if ← shouldAbort then
-        abortSpeculation
-      setMCtx mctx
-      let lem ← mkLibrarySearchLemma name mod
-      let newGoals ← goal.apply lem cfg
-      try
-        sideTactic newGoals
-      catch _ =>
-        if exactMode then failure else pure newGoals
-    let candidates ← librarySearchSymm (restrictedFinder ante) goal
-    let some results ← tryOnEach act candidates (collectAll := true)
-      | restoreState s; return none
-    -- stepwise audit: judge candidates in the order the search produced them
-    for (remaining, mctx) in results do
-      let attempt ← withoutModifyingState <| withMCtx mctx do
-        if remaining.isEmpty then
-          let proof ← instantiateMVars (mkMVar root)
-          -- P0 must run here too: with the ex-falso ban moved into the
-          -- polarity walk, `auditProof` alone no longer covers `absurd` & co.
-          if (← auditProof ante proof).isNone
-              && (← exFalsoVacuous? ante proof).isNone then
-            return some (proof, "restricted exact?")
-          return none
-        else if !exactMode then
+    -- goal.withContext is LOAD-BEARING: after `root.intros` the binders live in
+    -- the goal's local context, and candidate collection inspects the goal type
+    -- (DiscrTree keying can need an intro'd fvar's type, e.g. a projection of a
+    -- bound hypothesis like `hσ.measurableSpace`). Without it the search threw
+    -- `unknown free variable` on exactly the heavy-binder statements — swallowed
+    -- by the catch below, so the arm 0ms-failed silently (measured: every cw
+    -- pair; simple goals key without fvar lookups, which hid the bug).
+    let candidates ← goal.withContext <| librarySearchSymm (restrictedFinder ante) goal
+    if (← IO.getEnv "STATIC_EVAL_TRACE").isSome then
+      IO.eprintln s!"[exact?] candidates collected: {candidates.size}"
+    -- VANILLA-MECHANICS streaming loop (2026-08-25, probe-validated: the
+    -- previous interior — structuralSolve as the per-candidate side-solver +
+    -- a collectAll sweep of every candidate before any audit — burned the
+    -- whole heartbeat scope where the stock `exact?` machinery needs
+    -- milliseconds; probe: lib version timeout @100k vs 8ms for this shape).
+    -- Per candidate: apply, fill side goals with the SAME cheap solver stock
+    -- `exact?` uses (local assumptions, maxDepth 6, no exfalso), and on a full
+    -- close audit IMMEDIATELY — first candidate that passes wins; an
+    -- unauditable close just continues the scan (the original streaming
+    -- intent, now with vanilla's early exit). Restriction stays where it
+    -- belongs: the finder's vocabulary and the audit at acceptance.
+    for c in candidates do
+      if ← shouldAbort then break
+      let rem? ← tryCatch (do
+          let ((goal, mctx), (name, mod)) := c
+          setMCtx mctx
+          let lem ← mkLibrarySearchLemma name mod
+          let newGoals ← goal.apply lem cfg
+          let rem ← try
+              LibrarySearch.solveByElim [] (exfalso := false) newGoals (maxDepth := 6)
+            catch _ => pure newGoals
+          pure (some rem))
+        (fun _ => pure none)
+      match rem? with
+      | some [] =>
+        let proof ← instantiateMVars (mkMVar root)
+        -- P0 must run here too: with the ex-falso ban moved into the
+        -- polarity walk, `auditProof` alone no longer covers `absurd` & co.
+        if (← auditProof ante proof).isNone
+            && (← exFalsoVacuous? ante proof).isNone then
+          restoreState s
+          return some (proof, "restricted exact?")
+        restoreState s
+      | some remaining =>
+        if !exactMode && !remaining.isEmpty then
           -- apply?-mode: try to close the leftovers structurally
           let leftover ← structuralSolve (structuralSolveLemmas ante) remaining
           if leftover.isEmpty then
             let proof ← instantiateMVars (mkMVar root)
             if (← auditProof ante proof).isNone
                 && (← exFalsoVacuous? ante proof).isNone then
+              restoreState s
               return some (proof, "restricted apply? + structural side goals")
-          return none
+          restoreState s
         else
-          return none
-      if let some hit := attempt then
-        restoreState s
-        return some hit
+          restoreState s
+      | none => restoreState s
     restoreState s
     return none
-  catch _ =>
+  catch e =>
+    if (← IO.getEnv "STATIC_EVAL_TRACE").isSome then
+      IO.eprintln s!"[exact?] swallowed exception: {← e.toMessageData.toString}"
     restoreState s
     return none
-
 /-- Ante-free provability, core arms (mirrors the strict ladder minus the
 antecedent — same probe-parity principle as `provableFromOwnHyps`): defeq/rfl,
 structural close, restricted normalization. The discovery-rewrite arm lives in

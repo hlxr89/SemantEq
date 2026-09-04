@@ -1,6 +1,7 @@
 import Lean
 import StaticEval.Compile
 import StaticEval.Statement
+import StaticEval.PreambleMatch
 
 /-!
 # Per-pair contexts (Milestones 2.5 / 3.6)
@@ -24,6 +25,15 @@ diagrammed below at `BranchedContext`): the union imports and both preambles are
 elaborated exactly ONCE into a shared base, and each statement is added by
 resuming that side's preamble `Command.State` (`elabResume`) — no duplicate
 elaboration of the local context.
+
+When the two preambles are code-identical (comments/whitespace ignored) AND
+declare constants (structures,
+defs — the research-corpus shape), the preamble is elaborated once and BOTH
+statements are phrased over the same copy (the shared-preamble path in
+`buildBranchedContext`): two elaborations would mint two walled-off copies of
+every local structure — distinct inductive types no proof can cross, failing
+even the identity pair. Declaration-free preambles (`open`s/`variable`s only)
+stay on the legacy two-namespace path.
 
 The preamble/statement split uses the declaration range of the side's last statement
 (found during the isolated Milestone-1 compile, so positions are in the original
@@ -109,6 +119,101 @@ structure SharedContext where
 
 
 
+/-- Comment stripper for `normalizeCode`: drops nested `/- … -/` blocks (doc
+comments included) and `--` line comments; string literals are copied verbatim
+(a `--` inside one is not a comment). `depth` = block-comment nesting,
+`inStr` = inside a string literal. -/
+private partial def stripCommentsAux : List Char → Nat → Bool → List Char
+  | [], _, _ => []
+  | '\\' :: d :: tl, 0, true => '\\' :: d :: stripCommentsAux tl 0 true
+  | '"' :: tl, 0, true => '"' :: stripCommentsAux tl 0 false
+  | c :: tl, 0, true => c :: stripCommentsAux tl 0 true
+  | '/' :: '-' :: tl, d, false => stripCommentsAux tl (d+1) false
+  | '-' :: '/' :: tl, d+1, false => stripCommentsAux tl d false
+  | _ :: tl, d+1, false => stripCommentsAux tl (d+1) false
+  | '-' :: '-' :: tl, 0, false => stripCommentsAux (tl.dropWhile (· != '\n')) 0 false
+  | '"' :: tl, 0, false => '"' :: stripCommentsAux tl 0 true
+  | c :: tl, 0, false => c :: stripCommentsAux tl 0 false
+  | c :: tl, d+1, true => c :: stripCommentsAux tl (d+1) true -- unreachable: strings never open inside comments
+
+/-- Preamble equality is judged on CODE TOKENS: comments stripped, whitespace
+runs collapsed. The research corpora's ref/cand preambles routinely differ in
+prose (doc comments explaining each side's phrasing) while declaring identical
+constants — byte comparison would silently miss every such pair (measured: all
+6 mild candidates). A false EQUAL can only arise from the stripper mangling
+code, and fails loudly downstream (the cand statement won't elaborate over the
+ref preamble); a false DIFFERENT falls back to the legacy path. -/
+def normalizeCode (s : String) : String := Id.run do
+  let stripped := stripCommentsAux s.toList 0 false
+  let mut out := ""
+  let mut pendingWs := false
+  for c in stripped do
+    if c.isWhitespace then
+      pendingWs := true
+    else
+      if pendingWs && !out.isEmpty then out := out.push ' '
+      pendingWs := false
+      out := out.push c
+  return out
+
+/-- Does a preamble DECLARE anything (defs, structures, instances, lemmas)?
+Opens/`variable`-only preambles mint no constants, so sharing them buys
+nothing — such pairs stay on the legacy two-namespace path (keeps the entire
+PNV-style corpus bit-compatible). Conservative line-prefix test; a false
+negative merely falls back to the legacy path. -/
+def declaringPreamble (pre : String) : Bool :=
+  (pre.splitOn "\n").any fun l =>
+    let l := l.trim
+    [ "def ", "structure ", "inductive ", "class ", "abbrev ", "instance",
+      "theorem ", "lemma ", "opaque ", "axiom ", "noncomputable ", "private ",
+      "protected ", "@[", "mutual" ].any (·.isPrefixOf l)
+
+/-- Shared-preamble path (post-v1.0.0 fix (a), research corpora): rewrite the
+statement fragment's declaration head `theorem <name>`/`lemma <name>` to the
+root-anchored `theorem _root_.StaticEvalCand.<iso-full-name>`, so the cand
+statement can be elaborated while the REF preamble's scopes are open (sharing
+its constants — one `IsBM`, not two walled-off copies) yet still land under
+the cand namespace for extraction/self-absence. Rewrites the LAST occurrence
+(doc comments precede the declaration) and checks the following char is not
+an identifier char. `none` = head not found; caller falls back to the legacy
+path. -/
+def rootAnchorDecl (fragment : String) (isoFullName : Name) : Option String := Id.run do
+  let lastComp := match isoFullName with
+    | .str _ s => s
+    | _ => ""
+  if lastComp.isEmpty then return none
+  for kw in ["theorem ", "lemma "] do
+    let pat := kw ++ lastComp
+    let parts := fragment.splitOn pat
+    if parts.length ≥ 2 then
+      let tail := parts.getLast!
+      let boundaryOk := tail.isEmpty ||
+        (let c := tail.front
+         !(c.isAlphanum || c == '_' || c == '\'' || c == '!' || c == '?'))
+      if boundaryOk then
+        let newHead := kw ++ "_root_." ++ (candNamespace ++ isoFullName).toString
+        return some (String.intercalate pat parts.dropLast ++ newHead ++ tail)
+  return none
+
+/-- Drop trailing `end …` closer lines (and blanks) from a statement fragment.
+Shared-preamble path only: both statements are elaborated from the PREAMBLE
+state, and a fragment's trailing `end`s would pop the preamble's namespace
+frame in the ENVIRONMENT's scoped-activation stack (per-branch scope lists are
+copied, but activation is env-threaded) — killing scoped notation (`ℝ≥0`) for
+every branch built over that env (measured: cwself:03 `<branch.full>`; the
+legacy path survives only because its two preambles push duplicate frames).
+Unclosed namespaces at fragment EOF are already the norm — the wrapper
+namespace is never closed. -/
+def stripTrailingEnds (fragment : String) : String :=
+  let lines := (fragment.splitOn "\n").reverse
+  let rec dropEnds : List String → List String
+    | [] => []
+    | l :: ls =>
+      let t := l.trim
+      if t.isEmpty || t == "end" || "end ".isPrefixOf t then dropEnds ls
+      else l :: ls
+  String.intercalate "\n" (dropEnds lines).reverse
+
 /-- **M4.9-branch-env.** Elaborate `source` from an explicit `Command.State` —
 scopes (open namespaces, `open`/`variable` declarations, sections) survive, so a
 file can be elaborated in two stages: preamble first, statement later, WITHOUT
@@ -157,26 +262,113 @@ structure BranchedContext where
   refErrors    : Array String := #[]
   candErrors   : Array String := #[]
 
+/-- LEVEL 2 partial sharing (2026-08-25): elaborate the cand preamble
+THROWAWAY beside the ref one, fixpoint-match declarations α-modulo-namespace
+(`matchPreambles`), and build the remainder source (`candRemainder`) — the
+cand preamble minus matched declarations, with `open` injections so shared
+names resolve to the ref copies. `none` = don't share (no matches, nothing
+deletable, or any failure) → the caller elaborates the full cand preamble
+exactly as legacy. The throwaway environment is discarded; the real branch
+chain never contains it. -/
+def tryPartialShare (base : Environment) (sRefPre : Command.State)
+    (candPre : String) (opts : Options) : IO (Option String) := do
+  try
+    let sMidT := Command.mkState sRefPre.env {} opts
+    match ← elabResume sMidT s!"namespace {candNamespace}
+{candPre}" "<level2.throwaway>" with
+    | .error _ => return none
+    | .ok sT =>
+    let matched ← runMetaM sT.env opts (matchPreambles sT.env candNamespace refNamespace)
+    if matched.isEmpty then return none
+    let some chunks ← chunkPreamble base opts candPre | return none
+    let deletable := chunks.filter (fun c => c.name?.any matched.contains)
+    if deletable.isEmpty then return none
+    let rem := candRemainder refNamespace chunks matched
+    if (← IO.getEnv "STATIC_EVAL_TRACE").isSome then
+      IO.eprintln s!"[context] level-2 partial share: {matched.toList.length} decls matched, {deletable.size} chunks shared, remainder {rem.length}B"
+    return some rem
+  catch _ => return none
+
 def buildBranchedContext (refSrc candSrc : SideSource)
     (refDeclStart candDeclStart : Position) (opts : Options := {})
+    (candIsoName : Name := .anonymous)
     : IO BranchedContext := do
   match ← mkBaseEnv (unionImports refSrc.imports candSrc.imports) opts with
   | .error es => return { importErrors := es }
   | .ok base =>
+  let refPre := refSrc.preambleBefore refDeclStart
+  -- Shared-preamble path (fix (a)): when both preambles are code-identical AND
+  -- actually declare constants, elaborating them twice would mint two
+  -- walled-off copies of every local structure (distinct inductive types — no
+  -- proof can cross; even the identity pair fails). Instead the preamble is
+  -- elaborated ONCE (ref namespace) and the cand statement is elaborated in
+  -- the ref preamble's scopes with its declaration root-anchored under the
+  -- cand namespace (`rootAnchorDecl`), so both statements are phrased over
+  -- the SAME preamble constants while extraction and self-absence keep their
+  -- per-side namespaces. Declaration-free preambles stay on the legacy path.
+  let candPre := candSrc.preambleBefore candDeclStart
+  let gNorm := normalizeCode refPre == normalizeCode candPre
+  let gDecl := declaringPreamble refPre
+  let sharedCandStmt? : Option String :=
+    if candIsoName != .anonymous && gNorm && gDecl then
+      rootAnchorDecl (candSrc.statementFrom candDeclStart) candIsoName
+    else none
+  if gDecl then  -- diagnostic: only declaring preambles are sharing candidates
+    IO.eprintln s!"[context] shared-preamble gate: norm-eq={gNorm} anchored={sharedCandStmt?.isSome}"
   -- ref preamble: fresh state on base, wrapped in the ref namespace
   let sBase := Command.mkState base {} opts
   match ← elabResume sBase
       s!"namespace {refNamespace}
-{refSrc.preambleBefore refDeclStart}"
+{refPre}"
       "<branch.ref.preamble>" with
   | .error es => return { refErrors := es }
   | .ok sRefPre =>
-  -- cand preamble: fresh state (scopes must NOT leak across sides) on the grown env
+  match sharedCandStmt? with
+  | some candStmtSrc =>
+    -- SHARED: env₀ = base + one preamble; both branches extend it directly.
+    -- Trailing `end`s are stripped from BOTH fragments — see `stripTrailingEnds`.
+    let candStmtSrc := stripTrailingEnds candStmtSrc
+    match ← elabResume sRefPre candStmtSrc "<branch.cand.stmt>" with
+    | .error es => return { candErrors := es }
+    | .ok sB =>
+    match ← elabResume sRefPre (stripTrailingEnds (refSrc.statementFrom refDeclStart))
+        "<branch.ref.stmt>" with
+    | .error es => return { refErrors := es }
+    | .ok sA =>
+    match ← elabResume { sRefPre with env := sA.env } candStmtSrc
+        "<branch.full>" with
+    | .error es => return { candErrors := es }
+    | .ok sFull =>
+    return { envA? := some sA.env, envB? := some sB.env,
+             envFull? := some sFull.env }
+  | none =>
+  -- cand preamble: fresh state (scopes must NOT leak across sides) on the grown
+  -- env. LEVEL 2 first: on a partial α-modulo-namespace match the source is
+  -- the REMAINDER (matched declarations shared from the ref copy); any
+  -- level-2 failure — including the remainder failing to elaborate — falls
+  -- back to the full legacy text.
+  let candPreFull := candSrc.preambleBefore candDeclStart
+  let level2? ←
+    if candIsoName != .anonymous && declaringPreamble refPre
+        && declaringPreamble candPreFull then
+      tryPartialShare base sRefPre candPreFull opts
+    else pure none
   let sMid := Command.mkState sRefPre.env {} opts
-  match ← elabResume sMid
-      s!"namespace {candNamespace}
-{candSrc.preambleBefore candDeclStart}"
-      "<branch.cand.preamble>" with
+  let sCandPreE ← do
+    match level2? with
+    | some rem =>
+      match ← elabResume sMid s!"namespace {candNamespace}
+{rem}" "<branch.cand.preamble>" with
+      | .ok st => pure (Except.ok st)
+      | .error es =>
+        if (← IO.getEnv "STATIC_EVAL_TRACE").isSome then
+          IO.eprintln s!"[context] level-2 remainder failed to elaborate — legacy fallback ({es.size} errors)"
+        elabResume sMid s!"namespace {candNamespace}
+{candPreFull}" "<branch.cand.preamble>"
+    | none =>
+      elabResume sMid s!"namespace {candNamespace}
+{candPreFull}" "<branch.cand.preamble>"
+  match sCandPreE with
   | .error es => return { candErrors := es }
   | .ok sCandPre =>
   -- envB: cand's statement, RESUMING cand's preamble scopes (env already = env₀)

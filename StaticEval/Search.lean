@@ -1,6 +1,7 @@
 import Lean
 import StaticEval.Statement
 import StaticEval.RestrictedSearch
+import StaticEval.Repackage
 
 /-!
 # Bidirectional implication search (Milestones 3–4.2)
@@ -302,6 +303,18 @@ initialize deepLevelBudgetRef : IO.Ref Nat ← do
 default 1M = shipped behavior. -/
 def getDeepLevelBudget : BaseIO Nat := deepLevelBudgetRef.get
 
+/-- Heartbeat cap (option units) for the search/closer phase (`searchOpts`).
+Default 100k = shipped behavior — HALF of Lean's own 200k default, which is
+measurably below the honest unification cost on research-grade statements: on
+the shared-preamble mild corpus every structural arm dies at `whnf` timeout
+(100000) while the hand witness (`exact ante hσ hB`) elaborates fine under
+plain Lean defaults. Raise for big-statement corpora; failing arms burn
+proportionally longer. Discovery keeps its own 1M cap. -/
+initialize searchHeartbeatsRef : IO.Ref Nat ← do
+  IO.mkRef (((← IO.getEnv "STATIC_EVAL_HEARTBEATS").bind (·.toNat?)).getD 100000)
+/-- Search/closer heartbeat cap: env var or `--heartbeats`; default 100k. -/
+def getSearchHeartbeats : BaseIO Nat := searchHeartbeatsRef.get
+
 /-- **M4.7-S3e.** Ranking key: permutative first, then earlier probes, then
 goal-probe before ante-probe, then the index's own relevance order.
 
@@ -377,10 +390,16 @@ def runTermElabM (env : Environment) (opts : Options) (x : Term.TermElabM α) : 
 closes the goal. Parse failures (tactic not available in this environment) and tactic
 failures (including heartbeat timeouts) both yield `none`. -/
 def tryScript (goalType : Expr) (script : String) : Term.TermElabM (Option Expr) := do
-  match Parser.runParserCategory (← getEnv) `term s!"by {script}" with
+  let src := s!"by {script}"
+  match Parser.runParserCategory (← getEnv) `term src with
   | .error _ => return none
   | .ok stx =>
     try
+      -- the parsed syntax carries positions into `src`, but the ambient
+      -- fileMap is the fixture's; success paths that render the source at
+      -- those positions (`exact?`'s Try-this suggestion → String.Slice.pos!)
+      -- panic on mid-UTF-8 offsets. Align the map with the string (ledger 29).
+      withTheReader Core.Context (fun c => { c with fileMap := .ofString src }) do
       Term.withoutErrToSorry do
         let proof ← Term.elabTermEnsuringType stx goalType
         Term.synthesizeSyntheticMVarsNoPostponing
@@ -818,7 +837,7 @@ and (b) IS provable ante-free by the strict machinery minus the antecedent
 discovered rewrite) is pollution — the close is rejected. Same test for
 unused Prop hypotheses (P4). Fail-open on internal errors: the gate protects
 precision and must not silently destroy recall on exotic goals. -/
-def essentialUseAudit (ante : Name) (forbid : NameSet) (anteCanon : Expr)
+def essentialUseAuditCore (ante : Name) (forbid : NameSet) (anteCanon : Expr)
     (goalType : Expr) (_proof : Expr)
     : Term.TermElabM (Option String) := do
   -- ABLATION A1 (2026-08-21): essential-use audit off — covers the pre-gate,
@@ -876,6 +895,33 @@ def essentialUseAudit (ante : Name) (forbid : NameSet) (anteCanon : Expr)
       IO.eprintln s!"[static_eval]   essential-use audit error (fail-open): \
         {← e.toMessageData.toString}"
     return none
+
+/-- Absolute heartbeat scope (option units) for ONE essential-use audit run.
+Worst-case internal cost is already bounded piecewise (≤16 ablation
+obligations × 25k closer budget + ≤16 discovery sweeps × `probeBudget`
+≈ 1.2M units); this scope covers it with headroom. -/
+def essentialUseGateBudget : Nat := 1500000
+
+/-- Own-scope wrapper around `essentialUseAuditCore` (2026-08-25). The audit
+previously ran in the caller's AMBIENT scope: as the default-on PRE-gate it
+drained the direction budget on research-grade statements before any arm ran
+(every arm without a private reset then died at "timeout"), and on accept it
+killed legitimate closes — the heartbeat kill escapes the elaboration-level
+catch as an IO error and was billed to the ARM (measured: cwmild 03:2 is
+EquivalentRestricted in 269ms with the gate ablated, Inconclusive with it
+on). The private scope makes the audit's cost bounded and invisible to the
+ladder; runtime kills are caught at this boundary too — fail-open, traced,
+same policy as the core's own catch. -/
+def essentialUseAudit (ante : Name) (forbid : NameSet) (anteCanon : Expr)
+    (goalType : Expr) (proof : Expr) : Term.TermElabM (Option String) := do
+  tryCatchRuntimeEx
+    (withProbeBudget essentialUseGateBudget
+      (essentialUseAuditCore ante forbid anteCanon goalType proof))
+    (fun e => do
+      if (← IO.getEnv "STATIC_EVAL_TRACE").isSome then
+        IO.eprintln s!"[static_eval]   essential-use audit runtime kill \
+          (fail-open): {← e.toMessageData.toString}"
+      return none)
 
 /-- Run `attempts` in order; each runs in a fresh elaboration state. Every proof is
 audited: strict tier via AUDIT v2 (`auditProof` — antecedent required, all other
@@ -1017,7 +1063,7 @@ def proveDirectionTiered (env : Environment) (opts : Options) (goalType : Expr)
   -- statement PAST the point where its partner meets it — the same normal-form
   -- instability that the transport layering exists to prevent.
   let recDepth := if enableM44Transport then (4096 : Nat) else (512 : Nat)
-  let searchOpts := opts.set `maxHeartbeats (100000 : Nat) |>.set `maxRecDepth recDepth
+  let searchOpts := opts.set `maxHeartbeats (← getSearchHeartbeats) |>.set `maxRecDepth recDepth
   let discoveryOpts := opts.set `maxHeartbeats (1000000 : Nat) |>.set `maxRecDepth recDepth
   -- probes. `goalDefeqTrue` GATES the strict tier; `provableFromOwnHyps` is a
   -- reported FLAG only since M4.6 — and computing it costs a full
@@ -1077,6 +1123,22 @@ def proveDirectionTiered (env : Environment) (opts : Options) (goalType : Expr)
         Meta.MetaM.run' (withHeartbeatBudget 120000
           (normalizeThenSolve goalType ante (extraExts := exts)
             (transport := true)))⟩
+  -- structure repackaging (level 3, 2026-08-25): the probe-B move for pairs
+  -- whose preambles declare different-but-isomorphic structures. Gated inside
+  -- `repackagingClose` on pair-local structure constants — a no-op for every
+  -- other corpus.
+  phase1 := phase1.push
+    ⟨"structure repackaging", do
+      Meta.MetaM.run' (repackagingClose ante goalType)⟩
+  -- restricted `exact?` as the LAST cheap closer (moved from the phase-2 tail,
+  -- 2026-08-25, Henry's call): it is ante-only — needs nothing from discovery —
+  -- so a pair it closes skips discovery and the whole pool ladder. Audits run
+  -- inside `restrictedSearch` on every streamed candidate, same as before.
+  phase1 := phase1.push
+    ⟨"restricted exact?", do
+      match ← Meta.MetaM.run' (restrictedSearch goalType ante (exactMode := true)) with
+      | some (proof, _) => pure (some proof)
+      | none => pure none⟩
   -- PHASE 2 (built inline in the else-branch below, only if phase 1 fails).
   let flags := fun (o : DirectionOutcome) =>
     { o with goalDefeqTrue := defeqTrue, provableFromOwnHyps := ownHyps }
@@ -1376,11 +1438,7 @@ def proveDirectionTiered (env : Environment) (opts : Options) (goalType : Expr)
           if enablePackedBridges then
             let packed := applyPool goalType ante .hyps .simpFix false cappedEntries
             phase2 := phase2.push { packed with label := s!"[packed] {packed.label}" }
-        phase2 := phase2.push
-          ⟨"restricted exact?", do
-            match ← Meta.MetaM.run' (restrictedSearch goalType ante (exactMode := true)) with
-            | some (proof, _) => pure (some proof)
-            | none => pure none⟩
+        -- (restricted `exact?` moved to the phase-1 tail, 2026-08-25 — see above.)
         if enableRestrictedApply then
           phase2 := phase2.push
             ⟨"restricted apply?", do
