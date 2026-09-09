@@ -112,6 +112,12 @@ structure Ctx where
   /-- The goal's conclusion existentially quantifies a Sort — its type witness
   is arbitrary by nature, so foreign carriers are legitimate there. -/
   goalSortExists : Bool := false
+  /-- (b) refinement: does the goal STATEMENT's telescope bind a finiteness
+  instance (Finite/Fintype)? Distinguishes the honest Finite→Fintype upgrade
+  (goal grants finiteness) from a manufactured mint (0459: finiteness built
+  from vacuous Prop hypotheses, not a goal binder). Computed from goalType so a
+  `have`-minted Finite in the proof body cannot spoof it. -/
+  goalHasFin : Bool := false
   occRoles   : IO.Ref (FVarIdMap Role)
   anteFVars  : IO.Ref FVarIdSet
   /-- ledger 34 (data-surface instantiation audit): fvars established as the
@@ -713,6 +719,72 @@ partial def walk (ctx : Ctx) (role : Role) (neg : Nat) (e : Expr) : MetaM Unit :
               if slotData[i]! then
                 let a := args[i]!
                 if a.hasFVar then
+                  -- ledger 42: INSTANCE-SLOT STRICTNESS. The carrier doctrine one
+                  -- level up — the ante must be applied at the goal's own STRUCTURES,
+                  -- not just its objects. A class-typed argument in a data slot is
+                  -- an instance slot; if its class sits on a goal-surface carrier and
+                  -- the argument is not the goal's own instance binder, two shapes
+                  -- convict:
+                  --   (base) NON-subsingleton class the goal itself binds, filled
+                  --     with a replaced structure not defeq to the goal's instance
+                  --     (Pugh 2.92 / 1081: TopologicalSpace filled with ⊤). The
+                  --     substitution changes meaning because the class is not a
+                  --     subsingleton.
+                  --   (ii)  SUBSINGLETON but content-bearing (Fintype) manufactured
+                  --     when the goal statement grants no such structure (0459:
+                  --     Fintype minted from vacuous hypotheses). Subsingleton alone
+                  --     does not exempt — the interchange argument presupposes the
+                  --     goal HAS an instance to interchange with.
+                  -- Exemptions: defeq to the goal's own instance; the instance occurs
+                  -- in the goal's statement; classically-free scaffolding
+                  -- (Decidable/DecidableEq, synthesizable with a universal classical
+                  -- Decidable-provider — no class-name whitelist); or, for content
+                  -- subsingletons, the goal statement itself grants the structure
+                  -- (Finite/Fintype binder — the honest Finite→Fintype upgrade).
+                  if let some clsType ← inferTypeSafe a then
+                    if let some clsName ← (try Meta.isClass? clsType catch _ => pure none) then
+                      let surfSet ← ctx.surfaceFVars.get
+                      let surfCarrier := clsType.getAppArgs.any fun ca =>
+                        ca.isFVar && surfSet.contains ca.fvarId!
+                      let argCore ← resolveLocal ctx a
+                      let argIsSurfFvar := argCore.isFVar && surfSet.contains argCore.fvarId!
+                      if surfCarrier && !argIsSurfFvar then
+                        let mut goalInst : Option FVarId := none
+                        for fv in surfSet.toList do
+                          if goalInst.isNone then
+                            if let some d ← fv.findDecl? then
+                              if (← try Meta.isDefEq d.type clsType catch _ => pure false) then
+                                goalInst := some fv
+                        let defeqGoal ← match goalInst with
+                          | some g => try Meta.isDefEq a (mkFVar g) catch _ => pure false
+                          | none => pure false
+                        let subsing ← do
+                          match ← (try Meta.synthInstance? (← Meta.mkAppM ``Subsingleton #[clsType]) catch _ => pure none) with
+                          | some _ => pure true
+                          | none => pure false
+                        -- classically-free scaffolding test (Decidable/DecidableEq):
+                        -- synthesizable given a universal classical Decidable-provider?
+                        let synthCl ← do
+                          try
+                            let decProv := Expr.forallE `p (mkSort Level.zero)
+                              (mkApp (mkConst ``Decidable) (Expr.bvar 0)) BinderInfo.default
+                            Meta.withLocalDecl `cd BinderInfo.instImplicit decProv fun cd =>
+                              Meta.withNewLocalInstance ``Decidable cd do
+                                pure (← Meta.synthInstance? clsType).isSome
+                          catch _ => pure false
+                        -- does the goal STATEMENT grant finiteness (Finite/Fintype)?
+                        let goalFin := ctx.goalHasFin
+                        let occGoal := (← occursInGoalStmt ctx a) || (← occursInGoalStmt ctx argCore)
+                        unless defeqGoal || occGoal do
+                          if !subsing then
+                            -- base: replaced non-subsingleton structure the goal binds
+                            if goalInst.isSome then
+                              ctx.fail s!"ante instance slot at a surface carrier filled with a replaced {clsName} structure ({← Meta.ppExpr a}); the goal's own instance is unused"
+                          else
+                            -- (ii): content subsingleton manufactured, goal grants none;
+                            -- classically-free scaffolding stays exempt
+                            if !synthCl && !goalFin then
+                              ctx.fail s!"ante instance slot at a surface carrier filled with a manufactured {clsName} instance ({← Meta.ppExpr a}) the goal statement does not grant"
                   let isSortSlot ← do
                     match ← inferTypeSafe a with
                     | some ty => pure ty.isSort
@@ -1165,8 +1237,12 @@ def auditFixture (path : String) : IO FixtureResult := do
   let goalSortExists :=
     (goalType.find? (fun e =>
       e.isAppOfArity ``Exists 2 && (e.getArg! 0).isSort)).isSome
+  let goalHasFin :=
+    (goalType.find? (fun e => match e with
+      | .forallE _ d _ _ => d.isAppOf `Finite || d.isAppOf `Fintype
+      | _ => false)).isSome
   let ctx : Ctx := {
-    env, ante, assumed, goalConsts, goalPropCarrier, goalSortExists
+    env, ante, assumed, goalConsts, goalPropCarrier, goalSortExists, goalHasFin
     catMemo := ← IO.mkRef {}, reachMemo := ← IO.mkRef {}, sorryMemo := ← IO.mkRef {}
     localGrade := ← IO.mkRef {}, goalParts := ← IO.mkRef #[]
     occRoles := ← IO.mkRef {}, anteFVars := ← IO.mkRef {}

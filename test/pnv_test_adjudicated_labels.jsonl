@@ -400,7 +400,7 @@
 {"id": "pnv:test:0455:Pugh|exercise_2_26", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0456:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
 {"id": "pnv:test:0457:Munkres|exercise_18_8a", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0459:Herstein|exercise_3_2_21", "correct": true, "provenance": "manually reviewed: tier-flag WRONG, label True confirmed (ledger 39)"}
+{"id": "pnv:test:0459:Herstein|exercise_3_2_21", "correct": false, "provenance": "flipped True->False (ledger 42): involved Fintype mint caught by instance-slot strictness; tier flag vindicated"}
 {"id": "pnv:test:0460:Rudin|exercise_1_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0461:Putnam|exercise_1998_b6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0462:Munkres|exercise_18_13", "correct": false, "provenance": "unchanged"}
