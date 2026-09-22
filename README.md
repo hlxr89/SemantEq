@@ -1,17 +1,26 @@
-# StaticEval
+# SemantEq
 
-A static evaluator for **Lean 4 autoformalization**: given a *reference*
-statement and a *candidate* statement, it decides whether they say the same
-thing — semantically, not syntactically.
+Semantic equivalence of **Lean 4 formal statements**, for judging
+autoformalization: given a *reference* statement and a *candidate* statement,
+decide whether they say the same thing — semantically, not syntactically.
 
-What sets it apart is **evidence quality**. Every "equivalent" verdict is
-backed by machine-checked proofs of both implications, and every proof is
-*audited*: it must genuinely use the other statement, and may otherwise use
-only pure logic and equality/iff-grade rewriting. A proof that closes any
-other way (a decision procedure, an unrelated library theorem, a vacuous
-goal) is rejected rather than counted. The same audit is available standalone
-as a **ProofChecker** for externally written implication proofs — e.g. proofs
-produced by an LLM.
+**SemantEq** is an equivalence relation on formal statements that is strictly
+finer than logical equivalence: two statements are SemantEq when each turns
+into the other by a chain of four meaning-preserving actions (logical
+rearrangement, rewriting along the library's own equations and
+biconditionals, change of variables, and structural weakening), so that no
+step proves anything and no library theorem can supply a conclusion. This
+repository realises the relation in two programs:
+
+- **SemantEq-Eval** (`lake exe semanteq pairs.jsonl`) searches for such
+  chains. Every "equivalent" verdict is backed by machine-checked proofs of
+  both implications, and every proof is *audited*: it must genuinely use the
+  other statement, and may otherwise use only pure logic and equality/iff-grade
+  rewriting. A proof that closes any other way (a decision procedure, an
+  unrelated library theorem, a vacuous goal) is rejected rather than counted.
+- **SemantEq-ProofAudit** (`lake exe semanteq --proof`) applies the same
+  standard to an implication proof written by anyone — e.g. an LLM prover —
+  so a model's search can be used without trusting the model.
 
 ## Setup
 
@@ -21,17 +30,23 @@ Requirements: `git`, a C toolchain (`xcode-select --install` on macOS,
 
 ```bash
 curl https://elan.lean-lang.org/elan-init.sh -sSf | sh
-git clone <this repo> && cd StaticEval
+git clone <this repo> && cd SemantEq
 lake exe cache get     # prebuilt Mathlib (~5 GB download)
-lake build static_eval # a few minutes
+lake build semanteq # a few minutes
 ```
 
-The Lean toolchain and Mathlib versions are pinned (`lean-toolchain`,
-`lake-manifest.json`); elan installs the right toolchain automatically.
+The Lean toolchain and Mathlib versions are pinned (`lean-toolchain` pins
+Lean v4.30.0-rc1; `lake-manifest.json` pins the Mathlib commit, which is the
+`v4.30.0-rc1` tag); elan installs the right toolchain automatically and
+`lake exe cache get` downloads the prebuilt Mathlib for exactly that commit.
+Do not run `lake update`, which would move the pins.
 **Earlier Lean toolchains are not supported** — the code targets the pinned
 toolchain's APIs, and judgments are only meaningful against the pinned
 Mathlib. Linux and macOS are supported. Expect ~9 GB of RAM per running
-evaluation process.
+evaluation process with `import Mathlib`; statements that import only the
+Mathlib modules they need run in a correspondingly smaller environment (a few
+GB, seconds of start-up). Note that bridge lemmas outside the imported modules
+are then not available to the search.
 
 ## Usage
 
@@ -39,7 +54,24 @@ evaluation process.
 finish):
 
 ```bash
-lake exe static_eval pairs.jsonl results.jsonl
+lake exe semanteq pairs.jsonl results.jsonl
+```
+
+By default stdout shows a readable summary per pair, the verdict and, for
+each direction, the proof that closed it or `null`. The out-file is always
+the machine-readable JSONL. Add `--raw` to print the JSONL records on stdout
+instead (what the batch scripts consume):
+
+```bash
+lake exe semanteq --raw pairs.jsonl results.jsonl
+```
+
+For a single pair, two raw Lean files can be given instead of a JSONL file
+(exactly two arguments, both ending in `.lean`); each file is read as one
+side, judged through the same pipeline, and the result is printed to stdout:
+
+```bash
+lake exe semanteq ref.lean cand.lean
 ```
 
 Input, one pair per line:
@@ -59,8 +91,8 @@ Verdicts:
 | `Inconclusive` | neither direction closed |
 | `*CompileError`, `NotAProposition` | the input itself is the problem |
 
-Search strength is adjustable via CLI flags (equivalently, `STATIC_EVAL_*`
-environment variables):
+Search strength is adjustable via CLI flags (equivalently, `SEMANTEQ_*`
+environment variables; the pre-rename `STATIC_EVAL_*` names are still honoured):
 
 | flag | default | what it alters |
 |---|---|---|
@@ -73,7 +105,7 @@ environment variables):
 | `--heartbeats N` | 100000 | heartbeat cap per proof attempt in the search/closer phase; raise for very large statements (research-grade formalizations), where honest unification can exceed the default |
 
 ```bash
-lake exe static_eval --depth 2 --arm-budget 160 --discovery-budget 128 \
+lake exe semanteq --depth 2 --arm-budget 160 --discovery-budget 128 \
   --lemma-cap 48 --state-cap 48 --deep-level-budget 4000000 pairs.jsonl out.jsonl
 ```
 
@@ -83,50 +115,84 @@ runtime; the defaults favor precision and speed.
 **Audit an externally written implication proof** (the ProofChecker):
 
 ```bash
-lake exe static_eval --proof <fixture.lean | directory> ...
+lake exe semanteq --proof <fixture.lean | directory> ...
 ```
 
 A fixture is a single file: the assumed statement(s) proved by `sorry`, then
-the goal statement with a real proof. The checker reports `PASS`/`FAIL` with
-reasons.
+the goal statement with a real proof. The goal is the last theorem that is
+not `sorry`-proved; the antecedent is the last `sorry`-proved theorem declared
+before it, and any other `sorry`-proved theorem joins the assumed set. A
+directory argument audits every `.lean` file in it except `ref.lean` and
+`cand.lean` (not recursively). The checker prints the verdict, the reasons of
+a `FAIL`, or the severe warnings of a `PASS`; `--raw` prints the full JSON
+record with every recorded flag instead. A *severe* warning marks a library
+fact that was used to meet a hypothesis of the antecedent while drawing on
+nothing local (no hypothesis of the goal); such uses are tolerated, not
+failed, and can be counted as failures by the reader.
+
+**Case studies.** `case_studies/` holds the pairs and proofs discussed in the
+paper's appendices, one folder each with the statements, the quoted proof or
+recorded output, and a `NOTES.md` with the reproduction command and the
+expected verdict.
 
 **Run the bundled test suites** (data + expected outcomes + scoring, one
 command each):
 
 ```bash
 ./test/eval/run_eval.sh              # recall / pollution / trap suites
-./test/proofchecker/run_proofchecker.sh
+./test/proofaudit/run_proofaudit.sh
 ```
 
 See [`test/README.md`](test/README.md) for what each suite contains.
 
 ## Results
 
-All StaticEval numbers are strict-tier (audited proofs of both directions).
-BEq+ is the strongest published baseline, run by us on identical inputs in
-its own paper-era environment (Lean v4.8); the "on v4.30" column counts only
-its accepts whose proofs still elaborate on the current toolchain (after
-sympathetic repair of retired tactic syntax) — cross-toolchain evidence
-decays, which is itself an argument for checking proofs rather than trusting
-past runs.
+Headline numbers from the accompanying paper, all on this toolchain. The
+baseline BEq+ is its released implementation ported to the same Lean and
+Mathlib versions with no change of method.
 
-| benchmark | StaticEval | BEq+ (v4.8) | BEq+ (on v4.30) |
-|---|---|---|---|
-| **ProofNetVerif** (compilable, label-audited¹: 1047 equivalent / 2017 not) | P **99.8** / R **54.7** | P 99.2 / R 49.1 | P 99.2 / R 45.1 |
-| **Recall suite** (40 equivalent pairs, must accept) | **24**/40 | 17/40 | 15/40 |
-| **Trap suite** (29 non-equivalent, false accepts) | **0** | 20 | 20 |
-| **Pollution suite** (29 laundering attacks, false accepts) | **0** | 22 | 20 |
-| Pollution controls (6 genuine pairs, must accept) | 6/6 | 6/6 | — |
+| | SemantEq-Eval | BEq+ |
+|---|---|---|
+| **ProofNetVerif**, 3,100 compilable pairs, test split at adjudicated labels¹ | precision **99.8**, recall **60.1** | precision 96.4, recall 54.1 |
+| **100 adversarial non-equivalent pairs** (false accepts) | **0** | 51 |
 
-¹ Five StaticEval accepts carried a "not equivalent" benchmark label; on
-manual audit four are label errors (the pairs are genuinely equivalent —
-e.g. `[Nonempty I]` vs an explicit witness argument), counted here as
-correct for every system; BEq+ accepts none of them. The single remaining
-false positive is a candidate carrying an unused, synthesizable typeclass
-assumption. Under the raw labels: StaticEval P 99.1 / R 54.6.
+| | SemantEq-ProofAudit |
+|---|---|
+| model-written proofs, 410 equivalent pairs, certified in both directions | **332** (326 with severe uses counted as failures) |
+| model-written proofs, 101 non-equivalent pairs, certified in both directions | **0** |
 
-BEq+'s recall-suite accepts are a strict subset of StaticEval's. The
-ProofChecker reproduces its expected verdict on 19/19 bundled proof
-fixtures — faithful proofs pass; each named deception fails.
+¹ We audited the benchmark's test split and corrected 100 labels, every one
+from equivalent to non-equivalent; the adjudicated labels are released in
+`test/pnv_test_adjudicated_labels.jsonl`. The single false positive of
+SemantEq-Eval is a candidate carrying an unused but derivable structure
+assumption (`case_studies/H4_munkres_18_8b_evaluator_false_positive`).
+
+The bundled suites reproduce their expected outcomes on the current build:
+the ProofChecker corpus 19/19, the trap suite 29/29 rejected, the pollution
+suite with its six genuine controls accepted.
 
 Design overview: [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+## Paper
+
+The accompanying paper defines the SemantEq relation, describes both
+programs against it, and reports the evaluation above. `case_studies/`
+reproduces every example discussed in its appendices.
+
+## Released data
+
+- `test/pnv_test_adjudicated_labels.jsonl` — the adjudicated labels of the
+  ProofNetVerif test split, with the provenance of every changed label.
+- `test/` — the public evaluation suites and the proof-audit corpus.
+- `case_studies/` — every example discussed in the paper's appendices.
+- `test/campaign/` — every model-written implication proof of the campaign
+  (four prompt styles, 511 pairs, both directions), the prompts, a manifest
+  with the checker's verdict and marks for each, and a runner that re-checks
+  a style and prints the paper's table; see its README.
+
+## License
+
+The code is released under the Apache License 2.0 (see `LICENSE`).
+Statements derived from public benchmarks (ProofNetVerif, ProofNet,
+PutnamBench, Compfiles) remain under their sources' licences; our labels,
+curated pairs and case studies carry no separate licence yet.

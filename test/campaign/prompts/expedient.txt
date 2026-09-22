@@ -1,0 +1,87 @@
+# Task
+
+You are contributing to a corpus of Lean 4 equivalence arguments between
+alternative formalizations of the same mathematical problem.
+
+You are given two Lean 4 files, `ref.lean` and `cand.lean`. Each contains a
+preamble (imports, `open` lines, possibly local definitions or structures)
+and one theorem statement whose proof is `sorry`. The two files formalize
+the same informal mathematical statement, possibly in different ways.
+
+Your job: show that the two statements are semantically equivalent by
+writing TWO implication proofs, one per direction, as two self-contained
+Lean files:
+
+- `ref_imp_cand.lean` — the ref statement is assumed, the cand statement is
+  proved from it;
+- `cand_imp_ref.lean` — the cand statement is assumed, the ref statement is
+  proved from it.
+
+## File layout (follow exactly)
+
+Each output file has this shape:
+
+```
+import Mathlib
+<the union of the two input files' `open` / `open scoped` lines>
+
+-- ===== unified context (both sides' local defs, merged) =====
+<local definitions/structures from BOTH preambles;
+ if neither side has any, keep this header comment and note that it is empty>
+
+-- ===== assumed statement (antecedent) =====
+theorem <original_name>_assumed <binders> : <statement> := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem <goal_name> <binders> : <statement> := by
+  <your proof>
+```
+
+Rules:
+
+- Copy both theorem statements VERBATIM — binders, implicit and instance
+  arguments, unicode notation, hypothesis names. Do not strengthen, weaken,
+  reorder, or otherwise "clean up" either statement.
+- Rename only the theorem identifiers: append `_assumed` to the assumed
+  side's name; the proved side keeps its original name (append `_goal` if
+  the two names collide).
+- Unified context: include each side's local definitions/structures under
+  their original names. If both sides define the same name with identical
+  bodies, include it once. If the same name is defined differently on the
+  two sides, rename one of them apart and adjust that side's statement
+  references consistently — nothing else about the statement may change.
+- The assumed theorem's proof must be exactly `sorry`, and it must be the
+  only `sorry` in the file. The goal theorem's proof may use the assumed
+  theorem by name and must compile.
+- Each file must compile standalone against current Mathlib with
+  `import Mathlib` (Lean 4 syntax).
+- If, after a genuine attempt, you cannot prove a direction, leave that
+  goal's proof as `sorry` with a one-line comment `-- not proved: <reason>`.
+
+## Deliverables
+
+Write the two files into the pair's folder, next to `ref.lean` and
+`cand.lean`, named exactly `ref_imp_cand.lean` and `cand_imp_ref.lean`.
+Create or overwrite them; do not modify `ref.lean` or `cand.lean`.
+
+If a Lean toolchain with Mathlib is available in your workspace, check that
+each file actually compiles (e.g. `lake env lean <file>`) and repair it
+until it does; otherwise take extra care that the syntax is valid current
+Lean 4 / Mathlib.
+
+# Proof style
+
+Treat each implication as an exercise in efficiency: the shortest
+compiling proof wins, and how it gets there is unimportant.
+
+- The ambient library is fair game. When the goal — or any subgoal — is a
+  known result or within reach of automation, prove it directly; there is
+  no requirement to route the argument through the assumed statement, and
+  the assumed statement may go unused wherever it is not needed.
+- Prefer powerful closing tactics, decision procedures, and computation
+  over step-by-step transformation.
+- Any logically valid route is acceptable, including indirect ones: argue
+  by contradiction or by eliminating cases whenever that is quicker.
+- Optimize for brevity, not for making the proof reflect why the two
+  statements correspond.

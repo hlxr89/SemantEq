@@ -1,0 +1,17 @@
+import Mathlib
+
+open Topology Filter Real Complex TopologicalSpace Finset
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem exercise_1_18b_assumed
+  : ∀ (x : ℝ), x ≠ 0 → ¬ ∃ (y : ℝ), y ≠ 0 ∧ x * y = 0 := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem dummy (R : Type*) [Ring R] {x : R} (hx : x ≠ 0) : ∀ {y : R}, y ≠ 0 → x * y ≠ 0 := by
+  -- not proved: the reference only concerns ℝ, whereas an arbitrary ring can have zero divisors
+  sorry

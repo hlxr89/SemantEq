@@ -1,0 +1,25 @@
+import Mathlib
+
+open Filter Set TopologicalSpace
+open scoped Topology
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem exercise_23_3_assumed {X α : Type*} [TopologicalSpace X]
+  {A : α → Set X}
+  (hAa : ∀ a, IsConnected (A a))
+  (A₀ : Set X)
+  (hA : IsConnected A₀)
+  (h : ∀ a, A₀ ∩ A a ≠ ∅) :
+  IsConnected (A₀ ∪ (⋃ a, A a)) := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem dummy {X : Type*} [TopologicalSpace X] (A : Set X) (B : ι → Set X) (hA : IsConnected A) (hB : ∀ (i : ι), IsConnected (B i)) (hB_inter_A : ∀ (i : ι), (B i) ∩ A ≠ ∅) : IsConnected (A ∪ ⋃ (i : ι), B i) := by
+  have hconn := exercise_23_3_assumed
+    (α := PLift ι) (A := fun i => B i.down)
+    (fun i => hB i.down) A hA
+    (fun i => by simpa [Set.inter_comm] using hB_inter_A i.down)
+  rwa [Set.iUnion_plift_down] at hconn

@@ -1,0 +1,6 @@
+import Mathlib
+
+open Function Fintype Subgroup Ideal Polynomial Submodule Zsqrtd
+open scoped BigOperators
+
+theorem dummy {G : Type*} [Group G] [Fintype G] {p : ℕ} {q : ℕ} [Fact (Nat.Prime p)] [Fact (Nat.Prime q)] (h : Fintype.card G = p * q) : ¬IsSimpleGroup G := sorry

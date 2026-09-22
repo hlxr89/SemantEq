@@ -1,0 +1,6 @@
+import Mathlib
+
+open Fintype Subgroup Set Polynomial Ideal
+open scoped BigOperators
+
+theorem dummy (R : Type u) [Ring R] {u : R} (hu : IsUnit u) : IsUnit (-u) := sorry

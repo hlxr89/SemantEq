@@ -1,7 +1,7 @@
-name = "StaticEval"
+name = "SemantEq"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["StaticEval", "static_eval"]
+defaultTargets = ["SemantEq", "semanteq"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -15,9 +15,9 @@ scope = "leanprover-community"
 rev = "v4.30.0-rc1"
 
 [[lean_lib]]
-name = "StaticEval"
+name = "SemantEq"
 
 [[lean_exe]]
-name = "static_eval"
+name = "semanteq"
 root = "Main"
 supportInterpreter = true

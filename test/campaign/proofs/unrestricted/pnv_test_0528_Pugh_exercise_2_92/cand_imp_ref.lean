@@ -1,0 +1,41 @@
+import Mathlib
+
+open Filter Real Function Set
+open scoped Topology
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem dummy_assumed {X : Type*} [TopologicalSpace X] [CompactSpace X] (K : ℕ → Set X) (hK : ∀ n, IsCompact (K n)) (hne : ∀ n, (K n).Nonempty) (hdec : ∀ n, K (n+1) ⊆ K n) : (⋂ n, K n).Nonempty := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem exercise_2_92 {α : Type*} [TopologicalSpace α]
+  {s : ℕ → Set α}
+  (hs : ∀ i, IsCompact (s i))
+  (hne : ∀ i, (s i).Nonempty)
+  (hs : ∀ i, (s i) ⊇ (s (i + 1))) :
+  (⋂ i, s i).Nonempty := by
+  rename_i hcompact
+  have hs0 : ∀ n, s n ⊆ s 0 := by
+    intro n
+    induction n with
+    | zero => exact Subset.rfl
+    | succ n ih => exact (hs n).trans ih
+  let K : ℕ → Set (s 0) := fun n => (Subtype.val : s 0 → α) ⁻¹' s n
+  have hK : ∀ n, IsCompact (K n) := by
+    intro n
+    exact Topology.IsInducing.subtypeVal.isCompact_preimage' (hcompact n) (by
+      intro x hx
+      exact ⟨⟨x, hs0 n hx⟩, rfl⟩)
+  have hneK : ∀ n, (K n).Nonempty := by
+    intro n
+    obtain ⟨x, hx⟩ := hne n
+    exact ⟨⟨x, hs0 n hx⟩, hx⟩
+  have hdecK : ∀ n, K (n+1) ⊆ K n := by
+    intro n x hx
+    exact hs n hx
+  letI : CompactSpace (s 0) := isCompact_iff_compactSpace.mp (hcompact 0)
+  obtain ⟨x, hx⟩ := dummy_assumed K hK hneK hdecK
+  exact ⟨x.1, Set.mem_iInter.2 fun n => Set.mem_iInter.1 hx n⟩

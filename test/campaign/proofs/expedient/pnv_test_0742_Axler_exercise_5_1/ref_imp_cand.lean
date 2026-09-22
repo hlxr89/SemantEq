@@ -1,0 +1,21 @@
+import Mathlib
+
+open Fintype Complex Polynomial LinearMap FiniteDimensional Module Module.End
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem exercise_5_1_assumed {F V : Type*} [AddCommGroup V] [Field F]
+  [Module F V] {L : V →ₗ[F] V} {n : ℕ} (U : Fin n → Submodule F V)
+  (hU : ∀ i : Fin n, Submodule.map L (U i) = U i) :
+  Submodule.map L (∑ i : Fin n, U i : Submodule F V) =
+  (∑ i : Fin n, U i : Submodule F V) := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem dummy {V : Type*} [AddCommGroup V] [Module ℝ V] (T : End ℝ V) {m : ℕ} {U : Fin m → Submodule ℝ V} (hU : ∀ i, (U i).map T ≤ U i) : (Submodule.span ℝ (⋃ i, (U i : Set V))).map T ≤ Submodule.span ℝ (⋃ i, (U i : Set V)) := by
+  simp only [Submodule.span_iUnion, Submodule.span_eq]
+  rw [Submodule.map_iSup]
+  exact iSup_le fun i => (hU i).trans (le_iSup U i)

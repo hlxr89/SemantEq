@@ -1,0 +1,18 @@
+import Mathlib
+
+open Function Fintype Subgroup Ideal Polynomial Submodule Zsqrtd
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem dummy_assumed {G : Type*} [Group G] (a b : G) : IsConj (a * b) (b * a) := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem exercise_2_3_2 {G : Type*} [Group G] (a b : G) :
+  ∃ g : G, b* a = g * a * b * g⁻¹ := by
+  obtain ⟨g, hg⟩ := dummy_assumed a b
+  refine ⟨g, ?_⟩
+  simpa [mul_assoc] using (congrArg (fun x : G => x * (g : G)⁻¹) hg).symm
