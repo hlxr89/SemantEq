@@ -1,4 +1,23 @@
-.lake/
+# build artifacts (platform-specific; lake regenerates)
+/.lake
+
+# run outputs, logs, scratch (regenerable; tracked .md reports carry conclusions)
+/out.jsonl
+bench/out/
+bench/study/out/**/*.out.jsonl
+bench/**/*.log
+bench/**/*_chunks/
+bench/m49run/
+*.out.jsonl.part
 test/**/results.jsonl
+
+# OS noise
 .DS_Store
 test/campaign/results/
+
+# not repository content (2026-09-25)
+/Beq__*.pdf
+__pycache__/
+/commit_msg*.txt
+/scratch/
+/equiv_proofs_lean4.28.1/

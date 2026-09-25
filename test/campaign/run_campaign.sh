@@ -3,6 +3,7 @@
 # SemantEq-ProofAudit and print the paper's scoring.
 #   ./test/campaign/run_campaign.sh [unrestricted|faithful|rewrite|expedient|all]
 #   LIMIT=N   only the first N pairs (smoke test)
+#   STRICT=1  run the checker in --strict mode (the paper's strict reading); records go to results/<style>.strict.jsonl
 set -euo pipefail
 cd "$(dirname "$0")/../.."   # repository root
 STYLES="${1:-all}"; [ "$STYLES" = all ] && STYLES="unrestricted faithful rewrite expedient"
@@ -13,13 +14,15 @@ for s in $STYLES; do
   [ -n "${LIMIT:-}" ] && dirs=$(echo "$dirs" | head -n "$LIMIT")
   echo "== $s: $(echo "$dirs" | wc -l) pairs =="
   # shellcheck disable=SC2086
-  lake env .lake/build/bin/semanteq --raw --proof $dirs > "$D/results/$s.jsonl" 2> "$D/results/$s.err"
-  python3 - "$D" "$s" <<'PY'
+  if [ -n "${STRICT:-}" ]; then SFLAG=--strict; SUF=.strict; else SFLAG=""; SUF=""; fi
+  # shellcheck disable=SC2086
+  lake env .lake/build/bin/semanteq --raw $SFLAG --proof $dirs > "$D/results/$s$SUF.jsonl" 2> "$D/results/$s$SUF.err"
+  python3 - "$D" "$s" "$SUF" <<'PY'
 import json, sys, os, re
-D, s = sys.argv[1], sys.argv[2]
+D, s, suf = sys.argv[1], sys.argv[2], sys.argv[3]
 man = {r['pair']: r for r in map(json.loads, open(f'{D}/manifest.jsonl'))}
 rec = {}
-for l in open(f'{D}/results/{s}.jsonl'):
+for l in open(f'{D}/results/{s}{suf}.jsonl'):
     l = l.strip()
     if not l: continue
     r = json.loads(l)

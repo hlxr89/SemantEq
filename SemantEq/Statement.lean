@@ -194,7 +194,7 @@ def canonicalizeInstances (e : Expr) : MetaM Expr := do
       let ty ← Meta.inferType xi
       -- a NON-CLASS instImplicit binder (imported past `set_option
       -- checkBinderAnnotations false` by defective gold — `[CofiniteTopology X]`,
-      -- Munkres 23.4 ×9) must be skipped, not synthesized: `trySynthInstance`
+      -- nine statements of one exercise) must be skipped, not synthesized: `trySynthInstance`
       -- throws on non-classes, and the uncaught throw surfaced as InternalError
       -- for the whole pair .
       if (← try Meta.isClass? ty catch _ => pure none).isNone then continue

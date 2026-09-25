@@ -23,10 +23,18 @@ private def setNat (name : String) (v : String) (act : Nat → IO Unit) : IO Uni
 -- equivalent to its SEMANTEQ_* env var (flags win). Consumed from the
 -- front of the arg list before mode dispatch.
 initialize rawOutputRef : IO.Ref Bool ← IO.mkRef false
+/-- `--strict` (): the strict reading of the definition as a mode. A
+severe use (a library fact meeting a hypothesis of the antecedent while drawing
+on nothing local) fails the proof instead of being recorded, and the PROOFS of
+antecedent-free local bridges (`have h : A ↔ B := …`, bridge-shaped in-file
+lemmas) are read at their use role. Off by default. -/
+initialize strictProofRef : IO.Ref Bool ← IO.mkRef false
 
 def consumeFlags : List String → IO (List String)
   | "--raw" :: rest => do
     rawOutputRef.set true; consumeFlags rest
+  | "--strict" :: rest => do
+    strictProofRef.set true; consumeFlags rest
   | "--depth" :: v :: rest => do
     setNat "--depth" v (SemantEq.depthOverrideRef.set ∘ some); consumeFlags rest
   | "--lemma-cap" :: v :: rest => do
@@ -94,7 +102,7 @@ def main (rawArgs : List String) : IO UInt32 := do
     runReplay inFile outFile
   | "--proof" :: paths =>
     Lean.initSearchPath (← Lean.findSysroot)
-    ProofAudit.runProofCli paths (raw := ← rawOutputRef.get)
+    ProofAudit.runProofCli paths (raw := ← rawOutputRef.get) (strict := ← strictProofRef.get)
   | ["--dump-pack-index", outFile] =>
     -- catalog as inspectable metadata: build the packaging index against
     -- `import Mathlib` and write it as JSON {classHead: [lemmas]}. For
@@ -115,7 +123,8 @@ def main (rawArgs : List String) : IO UInt32 := do
       runJsonl refFile (some candFile)
   | [inFile] => runJsonl inFile none
   | _ =>
-    IO.eprintln "usage: semanteq [--raw] [strength flags] <pairs.jsonl> [out.jsonl] | <ref.lean> <cand.lean> | --proof <fixture.lean|dir>... | --dump-pack-index <out.json>"
+    IO.eprintln "usage: semanteq [--raw] [strength flags] <pairs.jsonl> [out.jsonl] | <ref.lean> <cand.lean> | [--strict] --proof <fixture.lean|dir>... | --dump-pack-index <out.json>"
     IO.eprintln "  --raw: print JSON records on stdout instead of the readable summary (the out-file is always JSONL)"
+    IO.eprintln "  --strict: the strict reading — a severe use (library fact meeting an antecedent hypothesis from nothing local) fails, and the proofs of antecedent-free local bridges are read too (= SEMANTEQ_STRICT=1)"
     IO.eprintln "  strength flags: --depth N --arm-budget N --discovery-budget N --lemma-cap N --state-cap N --deep-level-budget N --heartbeats N (= SEMANTEQ_* env vars)"
     return 1

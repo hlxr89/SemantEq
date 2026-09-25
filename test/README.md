@@ -5,30 +5,31 @@ ProofChecker. Everything here is a copy — the canonical development data lives
 outside this directory.
 
 ## eval/ — statement-pair suites for the evaluator
-- `recall/` — 40 equivalent-pair alternates (all must be ACCEPTED); curated
-  transformations + blind autoformalizations, each with a hand-proved
-  equivalence witness backing its label.
-- `pollution/` — 35 pairs: 29 "true statement + junk" laundering attacks (must
-  be REJECTED) + 6 `ctl:*` faithful twins (must be ACCEPTED — the
-  over-rejection meter).
-- `traps/` — 29 adversarial pairs, both sides independently provable but not
-  equivalent (must be REJECTED).
+- `recall/` — 40 pairs of curated transformations and blind
+  autoformalizations; 38 are equivalent (`expected: equivalent`), each with a
+  hand-proved equivalence witness backing its label, and 2 were ruled
+  non-equivalent on review (`expected: not_equivalent`). The default search
+  accepts 24 of the 38 (the others are the recall misses of the paper's
+  capability study) and rejects the 2; `default_search_accepts` records that
+  verdict per pair and is what the runner scores against.
+- `ablation/` — the 50 constructed pairs of the paper's ablation set (Table 2,
+  right half), all non-equivalent (must be REJECTED), in four classes named
+  after the failure modes of Section 3; see its README.
 
 Each suite: `suite.jsonl` ({id, reference, candidate}), `manifest.jsonl`
 (per-pair `expected` + provenance), `pairs/<id>/ref.lean|cand.lean` (raw
 statements). Run + score everything:
 
-    ./eval/run_eval.sh          # or: run_eval.sh recall|pollution|traps
+    ./eval/run_eval.sh          # or: run_eval.sh recall|ablation
 
 ## proofaudit/ — labeled implication-proof fixtures (SemantEq-ProofAudit)
-The audit corpus: 10 statement pairs, 19 proof fixtures (faithful proofs the
+The audit corpus: 12 statement pairs, 25 proof fixtures (faithful proofs the
 checker must PASS; unfaithful/look-alike proofs it must FAIL, each built
 around a named deception). `corpus.jsonl`, `manifest.jsonl` (per-fixture
-expected verdict), `pairs/<dir>/ref.lean|cand.lean|<proof>.lean`. Three
-look-alike directions are expected to PASS: their goal's conclusion is
-provable from the library alone, which the checker records as a
-`library-true` flag rather than a conviction (the `note` field of the
-manifest explains each); their pairs stay non-equivalent because the other
-direction fails.
+expected verdict), `pairs/<dir>/ref.lean|cand.lean|<proof>.lean`. Four
+directions of non-equivalent pairs are expected to PASS: they are the honest
+direction of a one-directional pair (the `note` field of the manifest
+explains each); their pairs stay non-equivalent because the other direction
+fails.
 
     ./proofaudit/run_proofaudit.sh

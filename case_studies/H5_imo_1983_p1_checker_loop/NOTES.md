@@ -1,6 +1,9 @@
-# H5 — an equivalent pair certified by no style, and the checker in the loop (Appendix H)
+# H5 — the checker in the loop overturns a label (Appendix H)
 
-IMO 1983 Problem 1. The reference carries positivity in the type `ℝ+`; the
+IMO 1983 Problem 1, a candidate autoformalized blind from the natural-language
+statement; it entered the recall suite labelled equivalent (a hand-written proof
+shows logical equivalence). The checker in the loop showed the label wrong and
+the pair is now non-equivalent (2026-09-24). The reference carries positivity in the type `ℝ+`; the
 candidate works over `ℝ` and restores positivity as a conjunct on the
 condition side of its biconditional. Every campaign style is rejected in both
 directions.

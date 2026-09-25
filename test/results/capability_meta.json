@@ -1,0 +1,59 @@
+{
+ "tiers": [
+  [
+   "T0",
+   "D1 base"
+  ],
+  [
+   "d1w1",
+   "D1+W1"
+  ],
+  [
+   "T1",
+   "D2"
+  ],
+  [
+   "T3",
+   "D2+W1"
+  ],
+  [
+   "T6",
+   "D2+W1+DW1"
+  ],
+  [
+   "T2",
+   "D4"
+  ],
+  [
+   "T4",
+   "D4+W1"
+  ],
+  [
+   "T7",
+   "D4+W1+DW1"
+  ],
+  [
+   "T5",
+   "D8+W1"
+  ],
+  [
+   "T8",
+   "D4+W2+DW2"
+  ],
+  [
+   "T9",
+   "D8+W2+DW2"
+  ]
+ ],
+ "quar3": [
+  "pnv:test:1211",
+  "pnv:test:1374",
+  "pnv:test:1221"
+ ],
+ "imputed_extra": null,
+ "never_run": [
+  "pnv:test:1211:Axler|exercise_5_13",
+  "pnv:test:1374:Axler|exercise_5_1"
+ ],
+ "note": "the two never-run pairs are charged each tier's mean residual-run time and counted as rejected"
+}

@@ -93,13 +93,31 @@ The same judgment, packaged for externally written proofs (`--proof`). A
 fixture provides the assumed statement(s) as `sorry`-proved theorems and the
 goal with a real proof; the checker walks the proof with role- and
 polarity-aware constant grading, ablates local subproofs to confirm the
-antecedent carries the spine, and finishes with an adversarial reproof: the
-proof's own ante-free constructions are granted, and if the goal then closes
-without the antecedent, the proof is rejected as evidence. Verdicts are
-`PASS`/`FAIL` with the failing reason. One tolerance is deliberate: a library
+antecedent carries the spine (the dependency test ignores dead mentions of
+the antecedent — a discarded argument, a proof of `True`, an unused binder),
+reads in-file helper lemmas inline at the place they are called, and walks
+the equation or biconditional a rewrite is justified by at the role of the
+rewrite: a fact used there to meet a side condition is recorded, while a
+part of the goal's conclusion equated to `True` there without the antecedent
+fails the proof. Eliminating an empty type or discriminating an absurd
+equation counts as ex falso like `False.elim`. It finishes with an
+adversarial reproof: the
+proof's own ante-free constructions and ante-free local facts, wherever they
+sit in the proof (inside case splits and lambdas included), are granted, and
+if the goal then closes without the antecedent, the proof is rejected as
+evidence. At every application of the antecedent the arguments are audited:
+a witness supplied for an existential hypothesis of the antecedent must be
+built from the goal's own variables or be a closed term the goal statement
+mentions; a witness conjured from nowhere (`n := 0` when the goal's own
+hypothesis already provides the object) fails the proof. Verdicts are
+`PASS`/`FAIL` with the failing reason, the tolerated uses by kind, the severe
+warnings, and any axiom beyond the three standard ones that the proof depends
+on. One tolerance is deliberate: a library
 fact that meets a hypothesis of the antecedent is recorded as a warning
 rather than failed (marked *severe* when it draws on nothing local), because
-Mathlib states many identifications in one direction only.
+Mathlib states many identifications in one direction only. `--strict` turns
+the tolerance off (every severe use fails) and also reads the proof of every
+local restatement that was admitted on the shape of its statement.
 
 ### `SemantEq/Driver.lean`, `Main.lean` — orchestration
 Batch processing with per-pair streaming (each result is flushed the moment

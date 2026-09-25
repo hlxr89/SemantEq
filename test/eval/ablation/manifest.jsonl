@@ -1,0 +1,50 @@
+{"id": "pol:and_arith", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "pol:and_prime", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "pol:and_eveniff", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "pol:and_topiff", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "pol:div_2v3", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "pol:bound_up_v_low", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "pol:pos_v_nonzero", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "pol:iffside", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "pol:exists_lift", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "pol:hyp_decor", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "esc:demorgan", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "esc:setof", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "esc:exists_dep", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "esc:forall_dep", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "esc:nested_p4", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "esc:hyp_rescue", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "esc:probe_timeout", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "esc:diag_tier", "class": "added_claim", "expected": "not_equivalent"}
+{"id": "col:top_open_chars", "class": "neighbouring_theorem", "expected": "not_equivalent"}
+{"id": "col:cont_integ_v_meas", "class": "neighbouring_theorem", "expected": "not_equivalent"}
+{"id": "col:lagrange_v_cauchy", "class": "neighbouring_theorem", "expected": "not_equivalent"}
+{"id": "col:euler_v_totmul", "class": "neighbouring_theorem", "expected": "not_equivalent"}
+{"id": "col:geom_summable_v_value", "class": "neighbouring_theorem", "expected": "not_equivalent"}
+{"id": "col:lub_v_archimedean", "class": "neighbouring_theorem", "expected": "not_equivalent"}
+{"id": "colh:galois_normal_v_separable", "class": "neighbouring_theorem", "expected": "not_equivalent"}
+{"id": "colh:sylow_sub3_v_notsimple", "class": "neighbouring_theorem", "expected": "not_equivalent"}
+{"id": "colh:evt_measurable_v_integrable", "class": "neighbouring_theorem", "expected": "not_equivalent"}
+{"id": "colh:compact_normal_v_regular", "class": "neighbouring_theorem", "expected": "not_equivalent"}
+{"id": "trap:trivial_true:one_plus_one_vs_two_plus_two", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "Two unrelated closed numerals facts; both rfl/simp-provable, reduce to distinct normal forms (2=2 vs 4=4)."}
+{"id": "trap:trivial_true:le_refl_nat_vs_eq_refl_real", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "Reflexivity of ≤ on ℕ vs reflexivity of = on ℝ; different types and predicates, both trivially true."}
+{"id": "trap:trivial_true:int_mul_vs_zero_le_one_real", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "A closed integer product vs 0 ≤ 1 on ℝ; both norm_num/simp-provable, no shared content."}
+{"id": "trap:trivial_true:string_length_vs_bool_and", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "String-length fact vs Boolean-algebra fact; both decide/rfl-provable, disjoint types."}
+{"id": "trap:omega_arith:succ_gt_vs_pred_lt", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "n < n+1 on ℕ vs m-1 < m on ℤ; both closed by omega, different types and inequalities."}
+{"id": "trap:omega_arith:two_mul_vs_add_sub_cancel", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "Doubling identity on ℕ vs additive cancellation on ℤ; both omega-provable, logically independent."}
+{"id": "trap:mathlib_restate:nat_add_comm_vs_list_length_append", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "Nat.add_comm vs List.length_append; exact? closes each side from the library, contents unrelated."}
+{"id": "trap:mathlib_restate:nat_mul_comm_vs_list_reverse_reverse", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "Nat.mul_comm vs List.reverse_reverse; two unrelated library facts, each exact?-closable."}
+{"id": "trap:mathlib_restate:add_zero_real_vs_set_nonempty_of_mem", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "add_zero on ℝ vs Set.nonempty_of_mem; algebra vs set theory, both instantly library-provable."}
+{"id": "trap:mathlib_restate:succ_ne_zero_vs_append_nil", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "Nat.succ_ne_zero vs List.append_nil; both verbatim library facts, no semantic relation."}
+{"id": "trap:vacuous:lt_zero_prime_vs_le_refl_real", "class": "vacuous_hypotheses", "expected": "not_equivalent", "description": "n < 0 is unsatisfiable on ℕ so the reference is vacuously true regardless of the Prime conclusion; candidate is unrelated reflexivity."}
+{"id": "trap:vacuous:false_imp_vs_mul_one", "class": "vacuous_hypotheses", "expected": "not_equivalent", "description": "False → (0 = 1) is vacuously true; candidate is an unrelated multiplicative identity."}
+{"id": "trap:vacuous:self_contradiction_vs_succ_le_self", "class": "vacuous_hypotheses", "expected": "not_equivalent", "description": "Both sides vacuous under contradictory hypotheses (p ∧ ¬p; n+1 ≤ n on ℕ) with absurd unrelated conclusions."}
+{"id": "trap:same_topic:reverse_reverse_vs_reverse_length", "class": "neighbouring_theorem", "expected": "not_equivalent", "description": "Both about List.reverse on List ℕ, both exact?-closable, but involution vs length-preservation are independent facts."}
+{"id": "trap:same_topic:gcd_self_vs_gcd_zero", "class": "neighbouring_theorem", "expected": "not_equivalent", "description": "Nat.gcd_self vs Nat.gcd_zero_right; identical vocabulary and shape, logically independent identities."}
+{"id": "trap:same_topic:subset_union_vs_inter_subset", "class": "neighbouring_theorem", "expected": "not_equivalent", "description": "Finset.subset_union_left vs Finset.inter_subset_left; same objects s t, dual lattice facts, not equivalent."}
+{"id": "trap:same_topic:abs_add_vs_abs_nonneg", "class": "neighbouring_theorem", "expected": "not_equivalent", "description": "Triangle inequality vs nonnegativity of |·| on ℝ; same vocabulary, both abs_* library lemmas, independent."}
+{"id": "trap:instance_decoy:add_comm_2_3_vs_5_7", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "Two different numeric instances of add_comm; reduce to 5=5 vs 12=12 so not defeq, no semantic relation between the instances."}
+{"id": "trap:instance_decoy:pow_cube_vs_square", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "2^3 = 8 vs 3^2 = 9 on ℤ; both decide/norm_num-provable closed facts, unrelated instances."}
+{"id": "trap:instance_decoy:dvd_10_100_vs_7_49", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "10 ∣ 100 vs 7 ∣ 49; different witnesses, both decide-provable, unrelated divisibility instances."}
+{"id": "trap:beqplus_a61:sorg_two_mul_vs_prop_id", "class": "unrelated_true_fact", "expected": "not_equivalent", "description": "Simon Sorg's generalization from BEq+ A.6.1: candidate p → p is a tautology, so bidirectional implication holds against any true reference."}
+{"id": "trap:exfalso:contra_ante_neg_goal", "class": "vacuous_hypotheses", "expected": "not_equivalent"}

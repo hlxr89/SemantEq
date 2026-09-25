@@ -1,13 +1,13 @@
 {"dir": "false_t0887_Herstein_2_2_6c", "file": "lookalike_cand_imp_ref.lean", "expected": "FAIL"}
 {"dir": "false_t0887_Herstein_2_2_6c", "file": "lookalike_ref_imp_cand.lean", "expected": "FAIL"}
-{"dir": "false_v0036_Dummit-Foote_7_1_11", "file": "lookalike_cand_imp_ref.lean", "expected": "PASS", "note": "library-true goal: the conclusion is provable from the library alone, so this direction is accepted with a \"library-true\" flag and never convicted; the pair stays non-equivalent because its other direction fails"}
+{"dir": "false_v0036_Dummit-Foote_7_1_11", "file": "lookalike_cand_imp_ref.lean", "expected": "PASS", "note": "accepted: the antecedent is applied honestly and its conclusion is the goal, which happens to be provable from the library alone as well; the pair stays non-equivalent because its other direction fails"}
 {"dir": "false_v0036_Dummit-Foote_7_1_11", "file": "lookalike_ref_imp_cand.lean", "expected": "FAIL"}
-{"dir": "false_v0402_Munkres_18_8b", "file": "lookalike_cand_imp_ref.lean", "expected": "PASS", "note": "library-true goal: the conclusion is provable from the library alone, so this direction is accepted with a \"library-true\" flag and never convicted; the pair stays non-equivalent because its other direction fails"}
+{"dir": "false_v0402_Munkres_18_8b", "file": "lookalike_cand_imp_ref.lean", "expected": "PASS", "note": "accepted: the antecedent is applied honestly and its conclusion is the goal, which happens to be provable from the library alone as well; the pair stays non-equivalent because its other direction fails"}
 {"dir": "false_v0402_Munkres_18_8b", "file": "lookalike_ref_imp_cand.lean", "expected": "FAIL"}
 {"dir": "false_v1436_Munkres_31_2", "file": "lookalike_cand_imp_ref.lean", "expected": "FAIL"}
 {"dir": "false_v1436_Munkres_31_2", "file": "lookalike_ref_imp_cand.lean", "expected": "FAIL"}
 {"dir": "false_v1979_Dummit-Foote_7_1_15", "file": "lookalike_cand_imp_ref.lean", "expected": "FAIL"}
-{"dir": "false_v1979_Dummit-Foote_7_1_15", "file": "lookalike_ref_imp_cand.lean", "expected": "PASS", "note": "library-true goal: the conclusion is provable from the library alone, so this direction is accepted with a \"library-true\" flag and never convicted; the pair stays non-equivalent because its other direction fails"}
+{"dir": "false_v1979_Dummit-Foote_7_1_15", "file": "lookalike_ref_imp_cand.lean", "expected": "PASS", "note": "accepted: the antecedent is applied honestly and its conclusion is the goal, which happens to be provable from the library alone as well; the pair stays non-equivalent because its other direction fails"}
 {"dir": "true_t0913_Axler_5_13", "file": "faithful_cand_imp_ref.lean", "expected": "PASS"}
 {"dir": "true_t0913_Axler_5_13", "file": "unfaithful_cand_imp_ref.lean", "expected": "FAIL"}
 {"dir": "true_t1077_Pugh_exercise_2_46", "file": "faithful_cand_imp_ref.lean", "expected": "PASS"}
@@ -17,3 +17,9 @@
 {"dir": "true_v0855_Dummit-Foote_exercise_4_5_16", "file": "faithful_cand_imp_ref.lean", "expected": "PASS"}
 {"dir": "true_v0855_Dummit-Foote_exercise_4_5_16", "file": "faithful_ref_imp_cand.lean", "expected": "PASS"}
 {"dir": "true_v0855_Dummit-Foote_exercise_4_5_16", "file": "unfaithful_ref_imp_cand.lean", "expected": "FAIL"}
+{"dir": "false_t0709_Herstein_2_2_3", "file": "faithful_ref_imp_cand.lean", "expected": "FAIL", "note": "closed-witness check: the goal's conclusion is proved from the goal's own hypothesis, then the antecedent's existential hypothesis is met with the conjured witness 0 while the goal's own i : ℤ is never transported"}
+{"dir": "false_t0709_Herstein_2_2_3", "file": "rewrite_ref_imp_cand.lean", "expected": "FAIL", "note": "same laundering; refused by both the antecedent-free replay (the local fact hcomm, reached through the rcases minor premise, closes the goal without the antecedent) and the closed-witness check"}
+{"dir": "false_t0709_Herstein_2_2_3", "file": "faithful_cand_imp_ref.lean", "expected": "PASS", "note": "the honest direction: the antecedent's existential hypothesis is witnessed with ↑n, the goal's own object"}
+{"dir": "false_d2_relevance_pair", "file": "ref_imp_cand_rfl.lean", "expected": "FAIL", "note": "conjunct-level ablation: the goal adds the redundant conjunct 2 + 2 = 4, which the proof closes by rfl without the antecedent (constructor component of And.intro); the evaluator's relevance gate refuses this direction too"}
+{"dir": "false_d2_relevance_pair", "file": "ref_imp_cand_decide.lean", "expected": "FAIL", "note": "same pair, the redundant conjunct closed by decide — an applicative component that never touches the antecedent"}
+{"dir": "false_d2_relevance_pair", "file": "cand_imp_ref.lean", "expected": "PASS", "note": "the honest direction: the goal Irrational (Real.sqrt 2) is the antecedent's own first component (structural weakening); the pair stays non-equivalent because the other direction fails"}

@@ -732,7 +732,7 @@ def discoverTransport (refStmt candStmt : Expr) (forbid : NameSet)
 deliberately NOT min'd against the ambient remaining budget: this wraps the
 essential-use audit, which runs AFTER the winning attempt has spent its search
 budget — min'ing would starve the gate exactly on expensive closes, i.e. the
-pollution would pass BECAUSE laundering it was costly. The audit is a post-hoc
+pollution would pass BECAUSE disguising it was costly. The audit is a post-hoc
 verifier with its own bounded budget; the wall-clock cost is ≤ cap × obligation
 count and only on accepted closes. -/
 def withHeartbeatCapT (n : Nat) (x : Term.TermElabM Bool) : Term.TermElabM Bool := do
@@ -744,7 +744,7 @@ def withHeartbeatCapT (n : Nat) (x : Term.TermElabM Bool) : Term.TermElabM Bool 
 
 /-- Discovery arm of the ante-free prober: can a single discovered Eq/Iff
 rewrite close the obligation outright (rewrite-to-rfl / self-rewrite / rewrite
-then structural)? This is the route the pollution launderings actually used
+then structural)? This is the route the disguised pollution actually used
 (`Nat.prime_iff_card_units` → card equation → rfl; `Nat.even_iff` self-rewrite
 → `X ↔ X`). Probe parity with the ladder, v2: candidates are discovered on the
 ∀-telescoped body and replayed after `intros` — and the probe runs for ALL
@@ -766,7 +766,7 @@ obligations entirely.
 `forbid` is the role-independent union of both sides' statement constants
 and MUST match what the ladder's own discovery forbids — probe parity. Forbidding
 less here than the ladder does would let the gate refute with a lemma the ladder
-was not allowed to use; forbidding more would let a laundered close slip past. -/
+was not allowed to use; forbidding more would let a disguised close slip past. -/
 def antefreeByRewrite (forbid : NameSet) (obl : Expr)
     (moduleRef? : Option (Meta.LazyDiscrTree.ModuleDiscrTreeRef
                             (Name × Meta.Rewrites.RwDirection)) := none)
@@ -984,7 +984,7 @@ def proveGoal (env : Environment) (opts : Options) (ante : Name) (forbid : NameS
               if !(usesConstant postEnv ante proof) then
                 pure (some "antecedent unused (diagnostic anteUsed gate)")
               else
-                -- v2: reachability alone is launderable (`And.left` of a
+                -- reachability alone can be disguised (`And.left` of a
                 -- polluted ante counts as "used") — the essential-use audit
                 -- gates this tier too, so gated pollution cannot relocate to
                 -- EquivalentUnrestricted
@@ -1142,7 +1142,7 @@ def proveDirectionTiered (env : Environment) (opts : Options) (goalType : Expr)
     { o with goalDefeqTrue := defeqTrue, provableFromOwnHyps := ownHyps }
   -- Probe gate (BEq+'s guard, enforced): a goal that is definitionally trivial or
   -- follows from its own hypotheses can carry no relational evidence — ANY
-  -- antecedent can be laundered into such a proof through whitelisted congruence
+  -- antecedent can be hidden inside such a proof through whitelisted congruence
   -- lemmas (`Nat.add_right_cancel c : 2 = 2` proves the defeq-trivial `1+1 = 2`
   -- with `anteUsed = true` while the antecedent does no semantic work). Such a
   -- direction may still close on the diagnostic tier (BEq-grade), never strictly.

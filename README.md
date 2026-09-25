@@ -115,7 +115,7 @@ runtime; the defaults favor precision and speed.
 **Audit an externally written implication proof** (the ProofChecker):
 
 ```bash
-lake exe semanteq --proof <fixture.lean | directory> ...
+lake exe semanteq [--strict] --proof <fixture.lean | directory> ...
 ```
 
 A fixture is a single file: the assumed statement(s) proved by `sorry`, then
@@ -124,11 +124,19 @@ not `sorry`-proved; the antecedent is the last `sorry`-proved theorem declared
 before it, and any other `sorry`-proved theorem joins the assumed set. A
 directory argument audits every `.lean` file in it except `ref.lean` and
 `cand.lean` (not recursively). The checker prints the verdict, the reasons of
-a `FAIL`, or the severe warnings of a `PASS`; `--raw` prints the full JSON
+a `FAIL`, the tolerated uses counted by kind, every severe warning in full,
+and any axiom the proof depends on beyond `propext`, `Classical.choice` and
+`Quot.sound` (a local `axiom`, or the one `native_decide` introduces; the
+`sorryAx` of the assumed statements is expected); `--raw` prints the full JSON
 record with every recorded flag instead. A *severe* warning marks a library
 fact that was used to meet a hypothesis of the antecedent while drawing on
 nothing local (no hypothesis of the goal); such uses are tolerated, not
-failed, and can be counted as failures by the reader.
+failed. `--strict` (or `SEMANTEQ_STRICT=1`) is the strict reading of the
+definition as a mode: every severe use fails the proof, and the proof of
+every local restatement admitted on the shape of its statement (`have h : A
+↔ B := …`, or an in-file lemma) is read at the place it is used, so a severe
+use hidden inside such a proof fails as well. The paper's strict table is
+the output of this mode.
 
 **Case studies.** `case_studies/` holds the pairs and proofs discussed in the
 paper's appendices, one folder each with the statements, the quoted proof or
@@ -139,7 +147,7 @@ expected verdict.
 command each):
 
 ```bash
-./test/eval/run_eval.sh              # recall / pollution / trap suites
+./test/eval/run_eval.sh              # recall / ablation suites
 ./test/proofaudit/run_proofaudit.sh
 ```
 
@@ -151,25 +159,43 @@ Headline numbers from the accompanying paper, all on this toolchain. The
 baseline BEq+ is its released implementation ported to the same Lean and
 Mathlib versions with no change of method.
 
-| | SemantEq-Eval | BEq+ |
+| | SemantEq-Eval | BEq+ (v4.30 port) |
 |---|---|---|
-| **ProofNetVerif**, 3,100 compilable pairs, test split at adjudicated labels¹ | precision **99.8**, recall **60.1** | precision 96.4, recall 54.1 |
-| **100 adversarial non-equivalent pairs** (false accepts) | **0** | 51 |
+| **ProofNetVerif test split**, 1,303 compilable pairs, published labels | precision **100.0**, recall **51.4** | precision 96.6, recall 48.8 |
+| same pairs, adjudicated labels¹ | precision **100.0**, recall **65.6** | precision 95.8, recall 61.8 |
+| **Ablation set**, 100 non-equivalent pairs² (false accepts) | **0** | 54 |
 
 | | SemantEq-ProofAudit |
 |---|---|
-| model-written proofs, 410 equivalent pairs, certified in both directions | **332** (326 with severe uses counted as failures) |
-| model-written proofs, 101 non-equivalent pairs, certified in both directions | **0** |
+| model-written proofs, 407 equivalent pairs, certified in both directions | **330** (323 in `--strict` mode) |
+| model-written proofs, 104 non-equivalent pairs, certified in both directions | **0** |
 
-¹ We audited the benchmark's test split and corrected 100 labels, every one
-from equivalent to non-equivalent; the adjudicated labels are released in
-`test/pnv_test_adjudicated_labels.jsonl`. The single false positive of
-SemantEq-Eval is a candidate carrying an unused but derivable structure
-assumption (`case_studies/H4_munkres_18_8b_evaluator_false_positive`).
+¹ We audited every label of the benchmark's test split and changed 102, every
+one from equivalent to non-equivalent; the adjudicated labels are released in
+`test/pnv_test_adjudicated_labels.jsonl`. Both systems are scored on both
+label sets.
+
+² Fifty ProofNetVerif test-split pairs labelled non-equivalent after
+adjudication, including every pair BEq+ accepts on that split, and fifty
+constructed pairs, one class for each failure mode of the paper's Section 3
+(`test/eval/ablation/`). Removing all four audits from SemantEq-Eval admits
+35 of the 100; the restricted move vocabulary alone still rejects 20 of the
+54 pairs BEq+ accepts.
+
+**Reproducing the tables.** The per-pair outcomes behind Tables 1 to 5 of the
+paper are tracked in `test/results/` and `test/campaign/manifest.jsonl`;
+one script recomputes every table from them:
+
+```bash
+python3 test/replicate_tables.py          # Tables 1-5
+python3 test/replicate_tables.py 1 2      # a selection
+```
 
 The bundled suites reproduce their expected outcomes on the current build:
-the ProofChecker corpus 19/19, the trap suite 29/29 rejected, the pollution
-suite with its six genuine controls accepted.
+the ProofChecker corpus 25/25, the 50 constructed pairs of the ablation
+suite all rejected, the recall suite at its recorded verdicts (24 of its 38
+equivalent pairs accepted by the default search, its 2 non-equivalent pairs
+rejected).
 
 Design overview: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
@@ -187,8 +213,24 @@ reproduces every example discussed in its appendices.
 - `case_studies/` — every example discussed in the paper's appendices.
 - `test/campaign/` — every model-written implication proof of the campaign
   (four prompt styles, 511 pairs, both directions), the prompts, a manifest
-  with the checker's verdict and marks for each, and a runner that re-checks
-  a style and prints the paper's table; see its README.
+  with the checker's verdict and marks for each in default and in strict
+  mode, and a runner that re-checks a style and prints the paper's table;
+  see its README.
+- `test/results/` — one line per pair for every run behind Tables 1 to 5:
+  SemantEq-Eval and the BEq+ port on the ProofNetVerif test split under both
+  label sets, the six ablation arms on the ablation set, and every search
+  configuration on the equivalent set with its running time.
+  `test/replicate_tables.py` recomputes the tables from these files alone.
+
+What can be re-run from this repository: the proof-audit corpus
+(`test/proofaudit/run_proofaudit.sh`), the recall suite and the constructed
+half of the ablation set (`test/eval/run_eval.sh`), and the whole campaign
+(`test/campaign/run_campaign.sh`, in default or `STRICT=1` mode). The
+ProofNetVerif statements themselves are not redistributed; the ids in
+`test/results/` and the adjudicated labels name the rows of the public
+dataset, so those runs can be repeated from it. The BEq+ numbers come from
+our port of its released implementation, which is not part of this
+repository; its per-pair outcomes are included in `test/results/`.
 
 ## License
 

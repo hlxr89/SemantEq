@@ -21,8 +21,7 @@ add `--raw` for the full JSON record.
 | `H1_rudin_1_4_foreign_structure/` | Appendix H | model proof refused (cand_imp_ref) |
 | `H2_munkres_22_5_foreign_object/` | Appendix H | model proof refused (cand_imp_ref) |
 | `H3_artin_2_8_6_antecedent_unused/` | Appendix H | model proof refused (ref_imp_cand) |
-| `H4_munkres_18_8b_evaluator_false_positive/` | Appendix H | the single PNV false positive |
-| `H5_imo_1983_p1_checker_loop/` | Appendix H | checker-in-the-loop; definition limit |
+| `H5_imo_1983_p1_checker_loop/` | Appendix H | checker-in-the-loop overturns a label (pair ruled non-equivalent) |
 
 The campaign proofs (H1–H3) are verbatim model output from the four-style
 campaign; the pair statements are verbatim benchmark or suite entries.

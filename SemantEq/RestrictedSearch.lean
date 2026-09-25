@@ -159,7 +159,7 @@ def plumbingLemmas : Array Name := #[
 transport bridge layer, pair-local delta unfolding, the conditional-cast
 discharger, and the deep finisher phase stack. Verdict from the validation: on the 14 catalogued transport pairs these produced **zero** new
 closes (the survey's four "clean" targets each need one further mechanism —
-numeral-case analysis for Imo2019P4, injection-term synthesis for
+numeral-case analysis for one competition statement, injection-term synthesis for
 putnam_1965_b3/1971_a1), while costing ~3x runtime and ~2x peak memory on
 failing directions, which dominate real batches. The code stays in the tree,
 tested and documented, behind this flag; flip to `true` together with the
@@ -341,7 +341,7 @@ partial def auditProof (ante : Name) (proof : Expr) (assumed : NameSet := {})
     -- an ASSUMED fact — like the antecedent, its sorry is sanctioned; do NOT
     -- look through it (its value reaches sorryAx by design). Internal-detail
     -- auxiliaries (`_simp_N`, `_proof_N`) are NEVER in this set — they must
-    -- still be expanded, or the audit grows a laundering blind spot.
+    -- still be expanded, or the audit grows a blind spot.
     if assumed.contains c then
       continue
     if (env.getModuleIdxFor? c).isNone then
@@ -417,7 +417,7 @@ contradictory, of ex-falso vacuity (a contradictory antecedent proves anything).
 the rule : never accept a strict close that closes a goal from a
 constructed `False`, wherever the `False` came from. This replaces the earlier
 provenance-tracking version, whose bookkeeping mislabelled goal-introduced
-hypotheses as antecedent-derived and rejected faithful proofs (finding F1).
+hypotheses as antecedent-derived and rejected faithful proofs (an early finding).
 
 **This does NOT reject negation GOALS.** `¬Q` unfolds to `Q → False`, so its
 TYPE mentions `False`; but a term of type `¬Q` is not a term of type `False`.
@@ -520,7 +520,7 @@ partial def constructsFalse? (visited : IO.Ref (NameSet × NameSet))
 /-- (precision): reject a strict close that closes its goal from a
 constructed `False` in positive position. Runs only on otherwise-accepted
 strict closes. See `constructsFalse?`; the antecedent is not consulted
-(deliberately — provenance tracking is what finding F1 broke). -/
+(deliberately — provenance tracking is what that early finding broke). -/
 def exFalsoVacuous? (_ante : Name) (proof : Expr) : MetaM (Option String) := do
   -- ABLATION: polarity / ex-falso audit off.
   if (← envVar "NO_P0").isSome then return none
@@ -1763,7 +1763,7 @@ def goalDefeqTrue (goalType : Expr) : MetaM Bool := do
 /-- Probe (BEq+ guard, enforced as a gate): is the goal provable from its own
 hypotheses alone? MUST wield exactly the strict closer's machinery minus the
 antecedent — any power asymmetry lets a self-provable goal slip the gate while
-the strict tier closes it with the destructured antecedent laundered into the
+the strict tier closes it with the destructured antecedent hidden inside the
 proof term (observed: `7 ∣ 49` via `⟨7, rfl⟩` at depth 16 with the depth-6
 probe blind to it). -/
 def provableFromOwnHyps (goalType : Expr) : MetaM Bool := do
@@ -1795,7 +1795,7 @@ structure GateObl where
 through `∧`/`↔` (both sides), `∃` (body decomposed under the binder — parts are
 re-generalized, so x-free parts lift out unchanged modulo a vacuous binder and
 x-dependent parts become `∀ x, part`), and `∀`/`→` (a Prop domain is a
-decoration obligation — at any depth, closing the nested-P4 laundering where
+decoration obligation — at any depth, closing the nested-conjunct disguise where
 `(q → p) ∧ r` hid the decoration inside a conjunct — and the body is decomposed
 under the binder, so hypothesis binders are KEPT in part obligations: the part
 `3 ∣ n` of `∀ n, 6 ∣ n → … ∧ 3 ∣ n` is the obligation `∀ n, 6 ∣ n → 3 ∣ n`).
@@ -1843,7 +1843,7 @@ partial def decomposeObls (xs : Array Expr) (e : Expr) (fuel : Nat)
         -- pool held `∀ xs, cᵢ` (hypothesis-free) and `∀ xs, A → c₁ ∧ c₂ ∧ c₃`
         -- (whole consequent) but never `∀ xs, A → cᵢ` — and
         -- `openNonPropBinders` may not bridge that gap (stripping a Prop
-        -- domain is the nested-P4 laundering). Faithful "iff restated as two
+        -- domain is the nested-conjunct disguise). Faithful "iff restated as two
         -- implications" pairs therefore lost their rescue purely by SPELLING:
         -- observed on one recall-suite pair, where the same content is
         -- rescued in the direction whose ante is implication-spelled and not
@@ -1877,8 +1877,8 @@ partial def decomposeObls (xs : Array Expr) (e : Expr) (fuel : Nat)
     else atom
 
 /-- Open an obligation's leading NON-Prop binders as fresh metavariables and
-stop at the first Prop domain: stripping a Prop domain is exactly the nested-P4
-laundering the review caught (`(q → p)` unified with a bare `p` after
+stop at the first Prop domain: stripping a Prop domain is exactly the nested-conjunct
+disguise the review caught (`(q → p)` unified with a bare `p` after
 `forallTelescope`, rescuing the polluted part). Fresh mvars let
 binder-dependent shared content unify across binder order/naming. -/
 partial def openNonPropBinders (e : Expr) : MetaM Expr := do

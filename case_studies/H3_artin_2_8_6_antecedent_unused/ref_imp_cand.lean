@@ -12,8 +12,6 @@ theorem exercise_2_8_6_assumed {G H : Type*} [Group G] [Group H] :
   sorry
 
 -- ===== goal statement, PROVED from the antecedent =====
-theorem dummy {G H : Type*} [Group G] [Group H] : center (G × H) = Subgroup.prod (center G) (center H) := by
+theorem dummy {G H : Type*} [Group G] [Group H] : (center (G × H) : Set (G × H)) = (center G : Set G) ×ˢ (center H : Set H) := by
   rcases exercise_2_8_6_assumed (G := G) (H := H) with ⟨_e⟩
-  apply SetLike.coe_injective
-  -- non-rewrite step: the arbitrary equivalence does not identify the embedded subgroup carriers
   exact Set.center_prod
