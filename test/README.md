@@ -22,6 +22,16 @@ statements). Run + score everything:
 
     ./eval/run_eval.sh          # or: run_eval.sh recall|ablation
 
+## Reproducing the paper's tables from scratch
+- `reproduce.sh` — re-runs the programs stage by stage (corpus, suites,
+  ablation, campaign, pnv, tiers); `reproduce.sh tables` then prints Tables 1
+  to 5 from the fresh records via `reproduce_tables.py`. `pnv_fetch.py`
+  downloads ProofNetVerif and rebuilds its pair files under the ids used here.
+  Runtimes and knobs are in the script header and in the top-level README.
+- `results/` — the per-pair record behind the paper's tables (one line per
+  pair and run). The reproduction reads it only for the BEq+ rows, whose
+  port is not part of this repository.
+
 ## proofaudit/ — labeled implication-proof fixtures (SemantEq-ProofAudit)
 The audit corpus: 12 statement pairs, 25 proof fixtures (faithful proofs the
 checker must PASS; unfaithful/look-alike proofs it must FAIL, each built

@@ -182,15 +182,6 @@ constructed pairs, one class for each failure mode of the paper's Section 3
 35 of the 100; the restricted move vocabulary alone still rejects 20 of the
 54 pairs BEq+ accepts.
 
-**Reproducing the tables.** The per-pair outcomes behind Tables 1 to 5 of the
-paper are tracked in `test/results/` and `test/campaign/manifest.jsonl`;
-one script recomputes every table from them:
-
-```bash
-python3 test/replicate_tables.py          # Tables 1-5
-python3 test/replicate_tables.py 1 2      # a selection
-```
-
 The bundled suites reproduce their expected outcomes on the current build:
 the ProofChecker corpus 25/25, the 50 constructed pairs of the ablation
 suite all rejected, the recall suite at its recorded verdicts (24 of its 38
@@ -216,21 +207,35 @@ reproduces every example discussed in its appendices.
   with the checker's verdict and marks for each in default and in strict
   mode, and a runner that re-checks a style and prints the paper's table;
   see its README.
-- `test/results/` — one line per pair for every run behind Tables 1 to 5:
-  SemantEq-Eval and the BEq+ port on the ProofNetVerif test split under both
-  label sets, the six ablation arms on the ablation set, and every search
-  configuration on the equivalent set with its running time.
-  `test/replicate_tables.py` recomputes the tables from these files alone.
+- `test/results/` — the per-pair record behind Tables 1 to 5, one line per
+  pair: the verdict of SemantEq-Eval and of the BEq+ port on the
+  ProofNetVerif test split under both label sets, of the six ablation arms
+  on the ablation set, and of every search configuration on the equivalent
+  set with its running time. The BEq+ verdicts are the only part of the
+  paper's numbers that the reproduction below cannot regenerate.
 
-What can be re-run from this repository: the proof-audit corpus
-(`test/proofaudit/run_proofaudit.sh`), the recall suite and the constructed
-half of the ablation set (`test/eval/run_eval.sh`), and the whole campaign
-(`test/campaign/run_campaign.sh`, in default or `STRICT=1` mode). The
-ProofNetVerif statements themselves are not redistributed; the ids in
-`test/results/` and the adjudicated labels name the rows of the public
-dataset, so those runs can be repeated from it. The BEq+ numbers come from
-our port of its released implementation, which is not part of this
-repository; its per-pair outcomes are included in `test/results/`.
+**Reproducing the tables from scratch.** `test/reproduce.sh` re-runs the
+programs on the released statements and proofs, stage by stage, and
+`test/reproduce.sh tables` prints Tables 1 to 5 from the fresh records:
+
+```bash
+python3 test/pnv_fetch.py                  # ProofNetVerif from Hugging Face (needs `datasets`)
+test/reproduce.sh corpus                   # both modes, ~10 min
+test/reproduce.sh suites                   # ~30 min
+LANES=3 test/reproduce.sh ablation         # Table 2,  ~2 h (+6 h for the ProofNetVerif half)
+LANES=3 test/reproduce.sh campaign         # Tables 4 and 5, ~1.5 h
+LANES=3 test/reproduce.sh pnv              # Table 1,  ~4 h
+LANES=3 test/reproduce.sh tiers            # Table 3,  days (TIER_ONLY='T0|d1w1|T1' for the excerpt rows)
+test/reproduce.sh tables
+```
+
+Each lane holds about 8 GB; every stage is chunked and resumable, and a
+pair that stalls a chunk is set aside and reported. The ProofNetVerif
+statements themselves are not redistributed; `test/pnv_fetch.py` rebuilds
+the pair files from the public dataset under the ids used here. The BEq+
+rows come from our port of its released implementation, which is not part
+of this repository; the fresh tables copy them from `test/results/` and
+mark them as copied.
 
 ## License
 

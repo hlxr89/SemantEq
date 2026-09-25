@@ -23,7 +23,7 @@ private def setNat (name : String) (v : String) (act : Nat → IO Unit) : IO Uni
 -- equivalent to its SEMANTEQ_* env var (flags win). Consumed from the
 -- front of the arg list before mode dispatch.
 initialize rawOutputRef : IO.Ref Bool ← IO.mkRef false
-/-- `--strict` (): the strict reading of the definition as a mode. A
+/-- `--strict`: the strict reading of the definition as a mode. A
 severe use (a library fact meeting a hypothesis of the antecedent while drawing
 on nothing local) fails the proof instead of being recorded, and the PROOFS of
 antecedent-free local bridges (`have h : A ↔ B := …`, bridge-shaped in-file
@@ -96,6 +96,7 @@ def runTwoFiles (refFile candFile : String) : IO UInt32 := do
 
 def main (rawArgs : List String) : IO UInt32 := do
   let args ← consumeFlags rawArgs
+  if (← IO.getEnv "SEMANTEQ_STRICT").any (fun v => v != "" && v != "0") then strictProofRef.set true
   match args with
   | ["--replay", inFile, outFile] =>
     Lean.initSearchPath (← Lean.findSysroot)

@@ -10,6 +10,7 @@ bench/**/*_chunks/
 bench/m49run/
 *.out.jsonl.part
 test/**/results.jsonl
+test/**/results.strict.jsonl
 
 # OS noise
 .DS_Store
@@ -21,3 +22,7 @@ __pycache__/
 /commit_msg*.txt
 /scratch/
 /equiv_proofs_lean4.28.1/
+
+# from-scratch reproduction outputs and downloaded data
+/test/reproduce_out/
+/test/data/
