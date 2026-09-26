@@ -1,4 +1,4 @@
-# H1 — instantiating the antecedent at a foreign structure (Appendix J)
+# J1 — instantiating the antecedent at a foreign structure (Appendix J)
 
 The candidate is a theorem about an arbitrary linearly ordered set; the model
 proves the reference (a partial order) from it by instantiating that set at
@@ -11,6 +11,6 @@ direction candidate ⇒ reference.
 
 Reproduce with SemantEq-ProofAudit (the proof must be rejected):
 
-    lake exe semanteq --proof case_studies/H1_rudin_1_4_foreign_structure/cand_imp_ref.lean
+    lake exe semanteq --proof case_studies/J1_rudin_1_4_foreign_structure/cand_imp_ref.lean
 
 Expected: `FAIL`, with the reasons naming the violated clause.

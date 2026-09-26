@@ -1,4 +1,4 @@
-# H3 — not using the antecedent at all (Appendix J)
+# J3 — not using the antecedent at all (Appendix J)
 
 The reference states an isomorphism between the centre of a product group and
 the product of the centres; the candidate states that the centre of the
@@ -14,7 +14,7 @@ direction reference ⇒ candidate (label: non-equivalent).
 
 Reproduce with SemantEq-ProofAudit (the proof must be rejected):
 
-    lake exe semanteq --proof case_studies/H3_artin_2_8_6_antecedent_unused/ref_imp_cand.lean
+    lake exe semanteq --proof case_studies/J3_artin_2_8_6_antecedent_unused/ref_imp_cand.lean
 
 Expected: `FAIL`, with two reasons, the goal closing without the antecedent
 and a library theorem asserted as content on the goal derivation.

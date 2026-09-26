@@ -1,4 +1,4 @@
-# H2 — instantiating the antecedent at a foreign object (Appendix J)
+# J2 — instantiating the antecedent at a foreign object (Appendix J)
 
 The candidate states only that the image of one open set is open; the model
 proves the reference (the restriction is an open map) by feeding the
@@ -11,6 +11,6 @@ direction candidate ⇒ reference.
 
 Reproduce with SemantEq-ProofAudit (the proof must be rejected):
 
-    lake exe semanteq --proof case_studies/H2_munkres_22_5_foreign_object/cand_imp_ref.lean
+    lake exe semanteq --proof case_studies/J2_munkres_22_5_foreign_object/cand_imp_ref.lean
 
 Expected: `FAIL`, with the reasons naming the violated clause.

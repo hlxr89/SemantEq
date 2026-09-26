@@ -1,4 +1,4 @@
-# C2 — A textual usage check is loose (Appendix C, second pair)
+# E2 — A textual usage check is loose (Appendix E, second pair)
 
 ProofNetVerif test pair `pnv:test:0479`, human label non-equivalent,
 accepted in both directions by BEq+ (released implementation in its own
@@ -21,4 +21,4 @@ library lemma `NormalSpace.normal` supplies the whole content, although
 
 Reproduce with SemantEq-Eval (the pair must be rejected):
 
-    lake exe semanteq case_studies/C2_beqplus_rudin_2_19a/ref.lean case_studies/C2_beqplus_rudin_2_19a/cand.lean
+    lake exe semanteq case_studies/E2_beqplus_rudin_2_19a/ref.lean case_studies/E2_beqplus_rudin_2_19a/cand.lean

@@ -1,4 +1,4 @@
-# H5 — the checker in the loop overturns a label (Appendix J)
+# J4 — the checker in the loop overturns a label (Appendix J)
 
 IMO 1983 Problem 1, a candidate autoformalized blind from the natural-language
 statement; it entered the recall suite labelled equivalent (a hand-written proof
@@ -26,9 +26,9 @@ directions.
 
 Reproduce:
 
-    lake exe semanteq --proof case_studies/H5_imo_1983_p1_checker_loop/ref_imp_cand_loop_final.lean
-    lake exe semanteq --proof case_studies/H5_imo_1983_p1_checker_loop/hypvariant_ref_imp_cand.lean case_studies/H5_imo_1983_p1_checker_loop/hypvariant_cand_imp_ref.lean
-    lake exe semanteq case_studies/H5_imo_1983_p1_checker_loop/ref.lean case_studies/H5_imo_1983_p1_checker_loop/cand.lean
+    lake exe semanteq --proof case_studies/J4_imo_1983_p1_checker_loop/ref_imp_cand_loop_final.lean
+    lake exe semanteq --proof case_studies/J4_imo_1983_p1_checker_loop/hypvariant_ref_imp_cand.lean case_studies/J4_imo_1983_p1_checker_loop/hypvariant_cand_imp_ref.lean
+    lake exe semanteq case_studies/J4_imo_1983_p1_checker_loop/ref.lean case_studies/J4_imo_1983_p1_checker_loop/cand.lean
 
 Observed: loop final `FAIL` with `goal part closes ante-free`; both
 hypothesis-variant directions `PASS`, each with one `severe:` warning (see

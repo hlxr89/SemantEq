@@ -1,7 +1,7 @@
-# B2 — a pair settled by two bridges (Appendix B)
+# D2 — a pair settled by two bridges (Appendix D)
 
 USAMO 1996 Problem 1. `ref.lean` is the Compfiles reference; `cand.lean` is
-the candidate printed in Appendix B, the same `Finset.range 90` sum with the
+the candidate printed in Appendix D, the same `Finset.range 90` sum with the
 division by 90 moved inside the sum. Indexing the statements surfaces
 `one_div_mul_eq_div` and `Finset.sum_div`, both equations; applied in
 sequence they turn one statement into the other, and the trigonometric sum
@@ -17,9 +17,9 @@ certified both directions).
 
 Reproduce:
 
-    lake exe semanteq --depth 2 case_studies/B2_usamo_1996_p1_two_bridges/ref.lean case_studies/B2_usamo_1996_p1_two_bridges/cand.lean
-    lake exe semanteq           case_studies/B2_usamo_1996_p1_two_bridges/ref.lean case_studies/B2_usamo_1996_p1_two_bridges/cand.lean
-    lake exe semanteq --depth 2 case_studies/B2_usamo_1996_p1_two_bridges/ref.lean case_studies/B2_usamo_1996_p1_two_bridges/cand_compfiles_autoformalized.lean
+    lake exe semanteq --depth 2 case_studies/D2_usamo_1996_p1_two_bridges/ref.lean case_studies/D2_usamo_1996_p1_two_bridges/cand.lean
+    lake exe semanteq           case_studies/D2_usamo_1996_p1_two_bridges/ref.lean case_studies/D2_usamo_1996_p1_two_bridges/cand.lean
+    lake exe semanteq --depth 2 case_studies/D2_usamo_1996_p1_two_bridges/ref.lean case_studies/D2_usamo_1996_p1_two_bridges/cand_compfiles_autoformalized.lean
 
 Observed: the first gives `EquivalentRestricted`, both directions closed by
 the two-step search with exactly the two lemmas; the second, at the default

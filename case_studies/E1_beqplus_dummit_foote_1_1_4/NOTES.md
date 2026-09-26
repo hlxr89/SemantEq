@@ -1,4 +1,4 @@
-# C1 — Closing tactics prove the goal without the antecedent (Appendix C, first pair)
+# E1 — Closing tactics prove the goal without the antecedent (Appendix E, first pair)
 
 ProofNetVerif test pair `pnv:test:0836`, human label non-equivalent,
 accepted in both directions by BEq+ (released implementation in its own
@@ -22,4 +22,4 @@ The candidate is a `%`-arithmetic identity over `Nat`, an instance of
 
 Reproduce with SemantEq-Eval (the pair must be rejected):
 
-    lake exe semanteq case_studies/C1_beqplus_dummit_foote_1_1_4/ref.lean case_studies/C1_beqplus_dummit_foote_1_1_4/cand.lean
+    lake exe semanteq case_studies/E1_beqplus_dummit_foote_1_1_4/ref.lean case_studies/E1_beqplus_dummit_foote_1_1_4/cand.lean

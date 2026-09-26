@@ -1,4 +1,4 @@
-# D2 — relevance (Appendix D)
+# F2 — relevance (Appendix F)
 
 `Irrational (Real.sqrt 2)` against `Irrational (Real.sqrt 2) ∧ (2 + 2 = 4)`.
 The candidate's second conjunct is provable by reflexivity without the
@@ -10,6 +10,6 @@ Source: pollution suite, pair `pol:and_arith`.
 
 Reproduce:
 
-    lake exe semanteq case_studies/D2_relevance_pair/ref.lean case_studies/D2_relevance_pair/cand.lean
+    lake exe semanteq case_studies/F2_relevance_pair/ref.lean case_studies/F2_relevance_pair/cand.lean
 
 Expected: `LikelyTooStrong` (only candidate ⇒ reference closes).
