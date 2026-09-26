@@ -1,7 +1,7 @@
 # test/eval/ablation — the constructed half of the ablation set (Table 2, right half)
 
 Fifty non-equivalent pairs, all of which SemantEq must REJECT, in four classes named after
-the failure modes of Section 3 of the paper. Every pair is a single edit of a real statement
+the failure modes of Section 2 of the paper. Every pair is a single edit of a real statement
 or a pairing of two library facts, and every added claim or partner statement is provable
 from the library alone, so an unrestricted prover proves both directions and a rejection is
 the work of the restriction and the audits, not of proving power.

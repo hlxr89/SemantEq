@@ -23,3 +23,9 @@
 {"dir": "false_d2_relevance_pair", "file": "ref_imp_cand_rfl.lean", "expected": "FAIL", "note": "conjunct-level ablation: the goal adds the redundant conjunct 2 + 2 = 4, which the proof closes by rfl without the antecedent (constructor component of And.intro); the evaluator's relevance gate refuses this direction too"}
 {"dir": "false_d2_relevance_pair", "file": "ref_imp_cand_decide.lean", "expected": "FAIL", "note": "same pair, the redundant conjunct closed by decide — an applicative component that never touches the antecedent"}
 {"dir": "false_d2_relevance_pair", "file": "cand_imp_ref.lean", "expected": "PASS", "note": "the honest direction: the goal Irrational (Real.sqrt 2) is the antecedent's own first component (structural weakening); the pair stays non-equivalent because the other direction fails"}
+{"dir": "false_w4_local_bridge", "file": "local_iff_ref_imp_cand.lean", "expected": "FAIL", "note": "W4: two unrelated library-true statements joined by a local iff whose directions ignore their hypothesis"}
+{"dir": "false_w4_local_bridge", "file": "local_iff_cand_imp_ref.lean", "expected": "FAIL"}
+{"dir": "false_w4_local_bridge", "file": "infile_lemma_ref_imp_cand.lean", "expected": "FAIL", "note": "the same bridge as an in-file lemma used by rw"}
+{"dir": "false_w4_local_bridge", "file": "propext_ref_imp_cand.lean", "expected": "FAIL", "note": "the same bridge as a propositional equation via propext"}
+{"dir": "false_w4_added_claim_bridge", "file": "bridge_ref_imp_cand.lean", "expected": "FAIL", "note": "an added library-true conjunct hidden inside a local iff; the component proving it uses no hypothesis"}
+{"dir": "false_w4_added_claim_bridge", "file": "bridge_cand_imp_ref.lean", "expected": "PASS", "note": "accepted: the honest direction drops the extra conjunct through the same local iff; the pair stays non-equivalent because the other direction fails"}

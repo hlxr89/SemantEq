@@ -48,13 +48,11 @@ comment (status `skipped`).
 - On an accepted direction: `ante_arg_warn` (a library fact or an
   antecedent-free local fact met a hypothesis of the antecedent; tolerated),
   `severe` (that fact drew on no local hypothesis). The paper's strict
-  reading is the checker's `--strict` mode: every severe use fails, and the
-  proofs of local lemmas admitted on the shape of their statement are read as
-  well, so a severe use inside such a proof fails too. Re-scoring the default
-  records with `severe` as a failure reproduces the strict columns below up to
-  the three equivalent-pair rows where a severe use sits inside such a proof
-  (unrestricted 317/58/32, faithful 323/57/27, expedient 304/45/58 from the
-  records; 317/56/34, 323/56/28, 303/45/59 from the mode).
+  reading is the checker's `--strict` mode: every severe use fails, at the top
+  level and inside the proofs of local lemmas admitted on the shape of their
+  statement (those proofs are read in both modes, so a severe use inside one
+  is recorded in default mode too). Re-scoring the default records with
+  `severe` as a failure reproduces the strict columns below exactly.
 
 ## Running
 
@@ -76,11 +74,11 @@ readings coincide because a severe use is already a failure; the agreement
 line then compares against the manifest's default-mode verdicts, so the
 directions the strict mode fails show up as disagreements.
 
-Expected, over all 511 pairs (the paper's Table 4 and Appendix Table 5):
+Expected, over all 511 pairs (the paper's Table 3 and Appendix Table 4):
 
 | style | equivalent, tolerant | equivalent, strict | non-equivalent, tolerant | non-equivalent, strict |
 |---|---|---|---|---|
 | unrestricted | 322/53/32 | 317/56/34 | 0/57/47 | 0/50/54 |
 | faithful     | 330/50/27 | 323/56/28 | 0/67/37 | 0/59/45 |
-| rewrite      | 329/51/27 | 323/57/27 | 0/70/34 | 0/64/40 |
+| rewrite      | 329/51/27 | 323/56/28 | 0/70/34 | 0/64/40 |
 | expedient    | 309/40/58 | 303/45/59 | 0/49/55 | 0/46/58 |

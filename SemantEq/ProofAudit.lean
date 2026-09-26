@@ -183,6 +183,10 @@ structure Ctx where
   suspended there (the sub-proof proves the bridge, not the goal) and content
   is graded at the flag tier. -/
   localProofCtx : IO.Ref Nat
+  /-- Depth inside a DIRECTION of a local bridge's proof (a Prop-binder lambda
+  met under `localProofCtx`): the direction is read as an implication proof of
+  its own, its hypothesis in the antecedent's role (`directionAblation`). -/
+  dirCtx : IO.Ref Nat
   /-- inline walks of an ante-involved in-file
   helper's body, per helper (capped, to bound repeated expansion). -/
   helperWalks : IO.Ref (NameMap Nat)
@@ -214,14 +218,14 @@ structure Ctx where
   /-- #8: ablate the components of `And.intro` / `Iff.intro` on the goal spine;
   `SEMANTEQ_NO_CONJUNCT_ABLATION=1` disables it (ablation). -/
   conjunctAblation : Bool := true
-  /-- `--strict` / `SEMANTEQ_STRICT` : the STRICT READING of
-  the definition as a mode. (a) A severe use — a library fact, or a local
-  hypothesis proved from nothing local, meeting a hypothesis of the antecedent
-  while drawing on no local hypothesis — FAILS the proof instead of being
-  recorded; (b) the PROOFS of antecedent-free local bridges are
-  also read at their use role, so a severe use hidden inside such a proof
-  counts as well. Default off — the shape admission (RULE 2) and the tolerance
-  are the shipped rules; strict adds to them, never replaces them. -/
+  /-- `--strict` / `SEMANTEQ_STRICT`: the STRICT READING of the definition as a
+  mode: a severe use — a library fact, or a local hypothesis proved from
+  nothing local, meeting a hypothesis of the antecedent while drawing on no
+  local hypothesis — FAILS the proof instead of being recorded, at the top
+  level and inside the proofs of local bridges alike. Default off — the shape
+  admission (RULE 2) and the tolerance are the shipped rules; strict adds to
+  them, never replaces them. (The reading of local bridge proofs itself runs
+  in both modes: see `directionAblation`.) -/
   strictLocalProofs : Bool := false
   /-- a proof-typed lambda component of `And.intro` / `Iff.intro` /
   `Exists.intro` at goal role binds the goal statement's OWN objects (the ∀
@@ -867,14 +871,17 @@ partial def matchWild (pat e : Expr) : Bool :=
 
 /-- Is `p` a proposition on the goal's spine (opened with the walk's fvars so
 far)? Closed parts are also compared up to definitional unfolding. -/
-def isGoalSpineProp (ctx : Ctx) (p : Expr) : MetaM Bool := do
-  -- the remaining CONCLUSION only: the goal's hypotheses (the peeled binders'
-  -- types) are premises, not parts to be proved
-  for q in spineParts (← ctx.goalTypeRem.get) do
+def spinePropOf (stmt p : Expr) : MetaM Bool := do
+  for q in spineParts stmt do
     if matchWild q p then return true
     if !q.hasLooseBVars then
       if ← isDefEqCheap q p then return true
   return false
+
+def isGoalSpineProp (ctx : Ctx) (p : Expr) : MetaM Bool := do
+  -- the remaining CONCLUSION only: the goal's hypotheses (the peeled binders'
+  -- types) are premises, not parts to be proved
+  spinePropOf (← ctx.goalTypeRem.get) p
 
 /-- Nesting depth of a leading `∃ x y …` (0 for a non-existential). -/
 partial def existsDepth : Expr → Nat
@@ -1060,6 +1067,122 @@ def severeIfClosed (ctx : Ctx) (nBefore : Nat) (c : Name) (args : Array Expr) : 
     let note := if data then "" else ", nor on any local variable"
     ctx.severe s!"outside fact {c} feeding ante application draws on no local hypothesis{note}"
 
+/-- External review, item W4: a direction `fun h : A => body` of a local bridge's
+proof is an implication proof of its own, and `h` takes the antecedent's role
+in it (`walkLam` puts every Prop binder met under `localProofCtx` into
+`anteFVars` for the scope of its body). A proof part of the direction — the
+whole body, a constructor component, a binding's value or continuation, the
+payload of a conversion — whose type is a goal-spine proposition other than
+`True`, mentions no hypothesis, and whose pruned cone never load-bears on a
+hypothesis of the direction is a goal part closed without any hypothesis:
+`⟨fun _ => qProof, fun _ => pProof⟩` between two library-true statements, or
+`fun ha => ⟨ha, bProof⟩` hiding an added claim. At goal role this fails the
+proof. At ante-arg role only the direction's conclusion is judged (the fact
+that meets the antecedent's hypothesis; an auxiliary fact inside the direction
+is free not to use the hypothesis), and a conclusion proved without the
+hypothesis is a hypothesis of the antecedent met from nothing local, the
+severe grade. Binding values are not parts here (they are walked in their own
+right); the continuation after a binding is. Shape admission (RULE 2) stays the floor: a bridge
+that is a library-lemma instance has no Prop lambdas and is untouched, and a
+direction proved by `intro h; linarith` load-bears on `h`. The spine test is
+the one the collapse rule uses, so a `0 < 2 ↔ True` that reduces an `if`
+condition is a reduction, not a refusal. Data binders are opened and passed
+through; nested Prop binders join the hypotheses. -/
+partial def directionAblation (ctx : Ctx) (role : Role) (memo : IO.Ref (Std.HashMap Expr Bool))
+    (locus : String) (concl : Option Expr) (e : Expr) : MetaM Unit := do
+  let e := e.headBeta
+  -- the part itself (a lambda over a hypothesis is opened instead; a lambda
+  -- over data is a proof of a quantified statement, judged as a whole first)
+  let hypLam ← match e with
+    | .lam _ t _ _ => (try Meta.isProp t catch _ => pure false)
+    | _ => pure false
+  unless hypLam || e.isMData do
+    if ← isProofSafe e then
+      if let some ty ← inferTypeSafe e then
+        -- a conclusion that holds by reflexivity (`x ∈ ↑i ↔ x ∈ i` after a
+        -- `simp`, `a = a`) is not a claim; `simp`-built `Set.ext` proofs bind
+        -- such hypotheses and rightly never use them
+        let refl ← match ty.iff? with
+          | some (a, b) => (do if a == b then pure true else isDefEqCheap a b)
+          | none => match ty.eq? with
+            | some (_, a, b) => (do if a == b then pure true else isDefEqCheap a b)
+            | none => pure false
+        unless ty.isConstOf ``True || refl || (← anteInvolved ctx ty) do
+          -- at goal role: a part on the goal's spine, as opened so far or as
+          -- stated (a direction that proves a quantified goal part carries its
+          -- own binder); at ante-arg role: the direction's conclusion itself,
+          -- the fact that meets the antecedent's hypothesis (an auxiliary fact
+          -- inside the direction is free not to use the hypothesis)
+          let onSpine ← if role == .goal then
+              (do if ← isGoalSpineProp ctx ty then pure true else spinePropOf ctx.goalStmt ty)
+            else match concl with
+              | some c => (do if matchWild c ty then pure true else isDefEqCheap c ty)
+              | none => pure false
+          if onSpine && !(← lbInvolvedGo ctx memo e) then
+            if role == .goal then
+              ctx.fail s!"goal part closes without the bridge's hypothesis ({locus}: {← Meta.ppExpr ty})"
+            else
+              ctx.severe s!"antecedent hypothesis met by a bridge direction proved without its hypothesis ({locus}: {← Meta.ppExpr ty})"
+            return
+  -- its structural components
+  match e with
+  | .mdata _ b => directionAblation ctx role memo locus concl b
+  | .lam n t b bi =>
+    withLocalDecl n bi t fun y => do
+      let isPf ← try Meta.isProp t catch _ => pure false
+      if isPf then ctx.anteFVars.modify (·.insert y.fvarId!)
+      directionAblation ctx role memo locus concl (b.instantiate1 y)
+      if isPf then ctx.anteFVars.modify (·.erase y.fvarId!)
+  | .letE n t v b _ =>
+    -- the binding's value is walked in its own right (RULE 2 / at use); a
+    -- value that load-bears on a hypothesis makes its binder one
+    withLetDecl n t v fun y => do
+      let carries ← lbInvolvedGo ctx memo v
+      if carries then ctx.anteFVars.modify (·.insert y.fvarId!)
+      directionAblation ctx role memo locus concl (b.instantiate1 y)
+      if carries then ctx.anteFVars.modify (·.erase y.fvarId!)
+  | .app .. =>
+    if let some bind := asBinding? e then
+      withLocalDecl bind.binderName bind.binderInfo bind.binderType fun y => do
+        let carries ← lbInvolvedGo ctx memo bind.value
+        if carries then ctx.anteFVars.modify (·.insert y.fvarId!)
+        directionAblation ctx role memo locus concl (bind.mkBody y)
+        if carries then ctx.anteFVars.modify (·.erase y.fvarId!)
+      return
+    let f := e.getAppFn
+    let args := e.getAppArgs
+    if let .const c _ := f then
+      if (c == ``And.intro || c == ``Iff.intro) && args.size == 4 then
+        directionAblation ctx role memo locus concl args[2]!
+        directionAblation ctx role memo locus concl args[3]!
+      else if c == ``Exists.intro && args.size == 4 then
+        directionAblation ctx role memo locus concl args[3]!
+      else if (c == ``Eq.mpr || c == ``Eq.mp || c == ``cast) && args.size == 4 then
+        directionAblation ctx role memo locus concl args[3]!
+      else if c == ``id && args.size == 2 then
+        directionAblation ctx role memo locus concl args[1]!
+  | _ => pure ()
+
+/-- W4: a Prop binder met under a local bridge's proof at a non-side role is the
+hypothesis of a direction. It joins `anteFVars` for the scope of its body, and
+the outermost such lambda is read as an implication proof of its own. Returns
+whether the binder was entered (then `leaveDirection` closes the scope). -/
+def enterDirection (ctx : Ctx) (role : Role) (n : Name) (t : Expr) (x : Expr) (body : Expr)
+    : MetaM Bool := do
+  unless (← ctx.localProofCtx.get) > 0 && role != .side do return false
+  unless ← (try Meta.isProp t catch _ => pure false) do return false
+  ctx.anteFVars.modify (·.insert x.fvarId!)
+  if (← ctx.dirCtx.get) == 0 then
+    let memo ← IO.mkRef ({} : Std.HashMap Expr Bool)
+    let concl ← if role == .anteArg then inferTypeSafe body else pure none
+    directionAblation ctx role memo s!"direction with hypothesis {n.eraseMacroScopes}" concl body
+  ctx.dirCtx.modify (·+1)
+  return true
+
+def leaveDirection (ctx : Ctx) (x : Expr) : MetaM Unit := do
+  ctx.dirCtx.modify (·-1)
+  ctx.anteFVars.modify (·.erase x.fvarId!)
+
 mutual
 
 partial def walkLam (ctx : Ctx) (role : Role) (neg : Nat) (bindersAnte : Bool)
@@ -1069,7 +1192,9 @@ partial def walkLam (ctx : Ctx) (role : Role) (neg : Nat) (bindersAnte : Bool)
       if bindersAnte then ctx.anteFVars.modify (·.insert x.fvarId!)
       let body := b.instantiate1 x
       let neg' := neg + (← negBump body (b.hasLooseBVar 0))
+      let hyp ← enterDirection ctx role n t x body   -- W4
       walkLam ctx role neg' bindersAnte body
+      if hyp then leaveDirection ctx x
   | e => walk ctx role neg e
 
 /-- Like `walkLam`, additionally collecting the lambda-chain's binder ids —
@@ -1086,7 +1211,9 @@ partial def walkLamCollect (ctx : Ctx) (role : Role) (neg : Nat)
       if markSurface then ctx.surfaceFVars.modify (·.insert x.fvarId!)
       let body := b.instantiate1 x
       let neg' := neg + (← negBump body (b.hasLooseBVar 0))
+      let hyp ← enterDirection ctx role n t x body   -- W4
       walkLamCollect ctx role neg' bindersAnte markSurface acc body
+      if hyp then leaveDirection ctx x
   | e =>
     -- surface-rooted destructuring: the continuation stays on the surface
     -- chain, so conclusion binders intro'd after an `obtain` still reach
@@ -1117,7 +1244,9 @@ partial def walkLamSurface (ctx : Ctx) (role : Role) (neg : Nat) : Expr → Meta
           ctx.surfaceFVars.modify (·.insert x.fvarId!)
       let body := b.instantiate1 x
       let neg' := neg + (← negBump body (b.hasLooseBVar 0))
+      let hyp ← enterDirection ctx role n t x body   -- W4
       walkLamSurface ctx role neg' body
+      if hyp then leaveDirection ctx x
   | .letE n t v b _ =>
     -- surface passthrough: the goal's own binders may be intro'd AFTER
     -- have/let steps; the peeler continues through bindings so the budget
@@ -1653,9 +1782,9 @@ partial def collapseAblation (ctx : Ctx) (a : Expr) (locus : String) (spine : Bo
 
 /-- Read the PROOF of a bridge-shaped, antecedent-free in-file
 lemma once, at the role where the lemma is used, with goal-part ablations
-suspended and content at the flag tier (the shape admission stays the floor). -/
+suspended and content at the flag tier (the shape admission stays the floor);
+its directions are read by `directionAblation` (W4). Both modes. -/
 partial def walkOutsideLocalProof (ctx : Ctx) (role : Role) (neg : Nat) (c : Name) : MetaM Unit := do
-  unless ctx.strictLocalProofs do return ()
   unless ((← ctx.localGrade.get).find? c).getD false do return ()
   let n := ((← ctx.helperWalks.get).find? c).getD 0
   if n ≥ 1 then return ()
@@ -1720,12 +1849,14 @@ partial def handleBinding (ctx : Ctx) (role : Role) (neg : Nat) (b : Binding)
         if ← goalShaped ctx b.binderType then
           ctx.flag s!"goal-shaped local bridge (have {b.binderName})"
         -- the shape admission is the floor; the
-        -- bridge's PROOF is now read at its use role, with goal-part ablations
+        -- bridge's PROOF is read at its use role, with goal-part ablations
         -- suspended (it proves the bridge, not the goal) and content at the
-        -- flag tier, while a goal part collapsed inside it is refused
+        -- flag tier, while a goal part collapsed inside it is refused and
+        -- each direction is read as an implication proof of its own
+        -- (`directionAblation`, W4). Both modes.
         match jr.orElse (fun _ => jrRec) with
         | some r =>
-          if ctx.strictLocalProofs && r != .side then
+          if r != .side then
             ctx.localProofCtx.modify (·+1)
             walk ctx r neg b.value
             ctx.localProofCtx.modify (·-1)
@@ -2259,7 +2390,7 @@ def auditFixture (path : String) (strict : Bool := false) : IO FixtureResult := 
     anteSlotData := ← IO.mkRef #[], localValues := ← IO.mkRef {}
     propValues := ← IO.mkRef {}
     chainCtx := ← IO.mkRef 0, frozenCtx := ← IO.mkRef 0
-    recordCtx := ← IO.mkRef 0, localProofCtx := ← IO.mkRef 0, helperWalks := ← IO.mkRef {}
+    recordCtx := ← IO.mkRef 0, localProofCtx := ← IO.mkRef 0, dirCtx := ← IO.mkRef 0, helperWalks := ← IO.mkRef {}
     goalOpenParts := ← IO.mkRef #[], goalTypeRem := ← IO.mkRef (mkConst ``True)
     fails := ← IO.mkRef #[], flags := ← IO.mkRef #[]
     sorryHit := ← IO.mkRef false, expanded := ← IO.mkRef {} }

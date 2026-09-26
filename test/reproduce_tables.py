@@ -72,7 +72,7 @@ def table3():
     meta = json.load(open(os.path.join(RES, 'capability_meta.json')))
     tiers = meta['tiers']
     ids = [r['id'] for r in rows]; N = len(ids)
-    print(f"\nTable 3 — search strength on the {N} pairs of the equivalent set")
+    print(f"\nTables 5 and 6 — search strength on the {N} pairs of the equivalent set")
     print("  a pair keeps the cost of the tier that first accepted it; an unaccepted pair is charged its")
     print("  re-run time at the tier, or the tier's mean re-run time when it was not re-run")
     base = {r['id']: (r['base_elapsed_s'], r['base_accept']) for r in rows}
@@ -173,7 +173,7 @@ if tier.get('T0'):
         rows.append(row)
     open(os.path.join(RES, 'capability_verdicts.jsonl'), 'w').write('\n'.join(json.dumps(r) for r in rows) + '\n')
     json.dump(meta, open(os.path.join(RES, 'capability_meta.json'), 'w'), indent=1)
-    made.append(f"Table 3: {len(rows)} pairs, tiers present: {[t for t, _ in meta['tiers'] if tier[t]]}" + (" (BEq+ rows from test/results)" if prior_cap else ""))
+    made.append(f"Tables 5/6: {len(rows)} pairs, tiers present: {[t for t, _ in meta['tiers'] if tier[t]]}" + (" (BEq+ rows from test/results)" if prior_cap else ""))
 
 # Tables 4 and 5
 STATUS = {'PASS': 'accepted', 'FAIL': 'rejected', 'SKIP_SORRY': 'skipped', 'ERROR': 'error'}
@@ -200,7 +200,7 @@ if got:
                 row[s][d] = e
         complete += ok; rows.append(row)
     open(os.path.join(RES, 'campaign_manifest.jsonl'), 'w').write('\n'.join(json.dumps(r, ensure_ascii=False) for r in rows) + '\n')
-    made.append(f"Tables 4/5: {complete} of {len(rows)} pairs complete in every style and mode (others counted as not accepted)")
+    made.append(f"Tables 3/4: {complete} of {len(rows)} pairs complete in every style and mode (others counted as not accepted)")
 
 print("fresh verdict tables in", RES); [print("  " + m) for m in made]
 if not made: print("  nothing found under", OUT); sys.exit(0)
@@ -208,5 +208,5 @@ if pnv: table1()
 if any(arm.values()): table2()
 if tier.get('T0'): table3()
 if got:
-    campaign('status', "Table 4 — model-written proofs, default mode (pairs both/one/neither)")
-    campaign('strict_status', "Table 5 — model-written proofs, strict mode (pairs both/one/neither)")
+    campaign('status', "Table 3 — model-written proofs, default mode (pairs both/one/neither)")
+    campaign('strict_status', "Table 4 — model-written proofs, strict mode (pairs both/one/neither)")

@@ -1,4 +1,4 @@
-# H5 — the checker in the loop overturns a label (Appendix H)
+# H5 — the checker in the loop overturns a label (Appendix J)
 
 IMO 1983 Problem 1, a candidate autoformalized blind from the natural-language
 statement; it entered the recall suite labelled equivalent (a hand-written proof

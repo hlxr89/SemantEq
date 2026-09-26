@@ -14,7 +14,7 @@ outside this directory.
   verdict per pair and is what the runner scores against.
 - `ablation/` — the 50 constructed pairs of the paper's ablation set (Table 2,
   right half), all non-equivalent (must be REJECTED), in four classes named
-  after the failure modes of Section 3; see its README.
+  after the failure modes of Section 2; see its README.
 
 Each suite: `suite.jsonl` ({id, reference, candidate}), `manifest.jsonl`
 (per-pair `expected` + provenance), `pairs/<id>/ref.lean|cand.lean` (raw
@@ -33,13 +33,17 @@ statements). Run + score everything:
   port is not part of this repository.
 
 ## proofaudit/ — labeled implication-proof fixtures (SemantEq-ProofAudit)
-The audit corpus: 12 statement pairs, 25 proof fixtures (faithful proofs the
+The audit corpus: 14 statement pairs, 31 proof fixtures (faithful proofs the
 checker must PASS; unfaithful/look-alike proofs it must FAIL, each built
 around a named deception). `corpus.jsonl`, `manifest.jsonl` (per-fixture
-expected verdict), `pairs/<dir>/ref.lean|cand.lean|<proof>.lean`. Four
+expected verdict), `pairs/<dir>/ref.lean|cand.lean|<proof>.lean`. Six
 directions of non-equivalent pairs are expected to PASS: they are the honest
 direction of a one-directional pair (the `note` field of the manifest
 explains each); their pairs stay non-equivalent because the other direction
-fails.
+fails. The Munkres 18.8b pair here is validation row 0402; the false
+acceptance of the paper's Appendix F is a different pair with the same
+exercise name, validation row 0006, which is not released. The expected verdicts hold in both modes (`STRICT=1` runs the
+strict reading).
 
     ./proofaudit/run_proofaudit.sh
+    STRICT=1 ./proofaudit/run_proofaudit.sh

@@ -25,9 +25,9 @@ private def setNat (name : String) (v : String) (act : Nat → IO Unit) : IO Uni
 initialize rawOutputRef : IO.Ref Bool ← IO.mkRef false
 /-- `--strict`: the strict reading of the definition as a mode. A
 severe use (a library fact meeting a hypothesis of the antecedent while drawing
-on nothing local) fails the proof instead of being recorded, and the PROOFS of
-antecedent-free local bridges (`have h : A ↔ B := …`, bridge-shaped in-file
-lemmas) are read at their use role. Off by default. -/
+on nothing local) fails the proof instead of being recorded, at the top level
+and inside the proofs of antecedent-free local bridges (`have h : A ↔ B := …`,
+bridge-shaped in-file lemmas), which are read in both modes. Off by default. -/
 initialize strictProofRef : IO.Ref Bool ← IO.mkRef false
 
 def consumeFlags : List String → IO (List String)
@@ -126,6 +126,6 @@ def main (rawArgs : List String) : IO UInt32 := do
   | _ =>
     IO.eprintln "usage: semanteq [--raw] [strength flags] <pairs.jsonl> [out.jsonl] | <ref.lean> <cand.lean> | [--strict] --proof <fixture.lean|dir>... | --dump-pack-index <out.json>"
     IO.eprintln "  --raw: print JSON records on stdout instead of the readable summary (the out-file is always JSONL)"
-    IO.eprintln "  --strict: the strict reading — a severe use (library fact meeting an antecedent hypothesis from nothing local) fails, and the proofs of antecedent-free local bridges are read too (= SEMANTEQ_STRICT=1)"
+    IO.eprintln "  --strict: the strict reading — a severe use (library fact meeting an antecedent hypothesis from nothing local) fails, at the top level and inside local bridge proofs (= SEMANTEQ_STRICT=1)"
     IO.eprintln "  strength flags: --depth N --arm-budget N --discovery-budget N --lemma-cap N --state-cap N --deep-level-budget N --heartbeats N (= SEMANTEQ_* env vars)"
     return 1

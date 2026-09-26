@@ -71,20 +71,20 @@ instance-packaging machinery (constructing missing typeclass instances from
 material already in context), and the audit stack that judges every accepted
 proof:
 
-- **Essential-use gate** — the antecedent must do semantic work for *every
+- **Relevance audit** (essential-use gate) — the antecedent must do semantic work for *every
   part* of the goal. A candidate that is the real statement conjoined with
   independently-true padding is rejected even though a proof exists; shared
   content carried by *both* statements is explicitly legal. Runs before the
   ladder, so polluted directions are refused instead of searched.
-- **Proof audit** — the accepted proof term's constants are graded
+- **Proof-term grading** (proof audit) — the accepted proof term's constants are graded
   categorically: the antecedent must be reached, and everything else must be
   data, an eliminator, logically schematic plumbing, or an
   equality/iff-grade bridge. A proof that imports an unrelated library
   theorem fails, whatever it proves.
-- **Polarity-aware ex-falso check** — proofs that manufacture `False` in
+- **Explosion check** (polarity-aware ex falso) — proofs that manufacture `False` in
   positive position (deriving the goal from a contradiction rather than a
   correspondence) are rejected; honest proofs of negated goals are not.
-- **Counterfactual replay** — every accepting transform is replayed *without*
+- **Antecedent-free replay** (counterfactual replay) — every accepting transform is replayed *without*
   the antecedent; if it still closes, the "correspondence" was vacuous and
   the accept is discarded.
 
@@ -115,9 +115,12 @@ warnings, and any axiom beyond the three standard ones that the proof depends
 on. One tolerance is deliberate: a library
 fact that meets a hypothesis of the antecedent is recorded as a warning
 rather than failed (marked *severe* when it draws on nothing local), because
-Mathlib states many identifications in one direction only. `--strict` turns
-the tolerance off (every severe use fails) and also reads the proof of every
-local restatement that was admitted on the shape of its statement.
+Mathlib states many identifications in one direction only. The proof of every
+local restatement admitted on the shape of its statement is read as well, each
+direction as an implication proof of its own with its hypothesis in the
+antecedent's role, so a direction proved without its hypothesis fails.
+`--strict` turns the tolerance off (every severe use fails, inside such proofs
+too).
 
 ### `SemantEq/Driver.lean`, `Main.lean` — orchestration
 Batch processing with per-pair streaming (each result is flushed the moment

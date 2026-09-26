@@ -1,4 +1,4 @@
-# H1 — instantiating the antecedent at a foreign structure (Appendix H)
+# H1 — instantiating the antecedent at a foreign structure (Appendix J)
 
 The candidate is a theorem about an arbitrary linearly ordered set; the model
 proves the reference (a partial order) from it by instantiating that set at

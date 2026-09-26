@@ -131,12 +131,15 @@ and any axiom the proof depends on beyond `propext`, `Classical.choice` and
 record with every recorded flag instead. A *severe* warning marks a library
 fact that was used to meet a hypothesis of the antecedent while drawing on
 nothing local (no hypothesis of the goal); such uses are tolerated, not
-failed. `--strict` (or `SEMANTEQ_STRICT=1`) is the strict reading of the
-definition as a mode: every severe use fails the proof, and the proof of
-every local restatement admitted on the shape of its statement (`have h : A
-↔ B := …`, or an in-file lemma) is read at the place it is used, so a severe
-use hidden inside such a proof fails as well. The paper's strict table is
-the output of this mode.
+failed. The proof of every local restatement admitted on the shape of its
+statement (`have h : A ↔ B := …`, or an in-file lemma) is read at the place
+it is used: each direction of it is checked as an implication proof of its
+own, so a direction that proves its conclusion without its hypothesis fails
+the proof, and a library fact inside it that meets a hypothesis of the
+antecedent is recorded like any other. `--strict` (or `SEMANTEQ_STRICT=1`) is
+the strict reading of the definition as a mode: every severe use fails the
+proof, at the top level and inside such local proofs alike. The paper's
+strict table is the output of this mode.
 
 **Case studies.** `case_studies/` holds the pairs and proofs discussed in the
 paper's appendices, one folder each with the statements, the quoted proof or
@@ -177,13 +180,13 @@ label sets.
 
 ² Fifty ProofNetVerif test-split pairs labelled non-equivalent after
 adjudication, including every pair BEq+ accepts on that split, and fifty
-constructed pairs, one class for each failure mode of the paper's Section 3
+constructed pairs, one class for each failure mode of the paper's Section 2
 (`test/eval/ablation/`). Removing all four audits from SemantEq-Eval admits
 35 of the 100; the restricted move vocabulary alone still rejects 20 of the
 54 pairs BEq+ accepts.
 
 The bundled suites reproduce their expected outcomes on the current build:
-the ProofChecker corpus 25/25, the 50 constructed pairs of the ablation
+the ProofChecker corpus 31/31 in both modes, the 50 constructed pairs of the ablation
 suite all rejected, the recall suite at its recorded verdicts (24 of its 38
 equivalent pairs accepted by the default search, its 2 non-equivalent pairs
 rejected).
@@ -194,20 +197,20 @@ Design overview: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 The accompanying paper defines the SemantEq relation, describes both
 programs against it, and reports the evaluation above. `case_studies/`
-reproduces every example discussed in its appendices.
+reproduces the case studies discussed in its appendices.
 
 ## Released data
 
 - `test/pnv_test_adjudicated_labels.jsonl` — the adjudicated labels of the
-  ProofNetVerif test split, with the provenance of every changed label.
+  ProofNetVerif test split, marking which labels were changed.
 - `test/` — the public evaluation suites and the proof-audit corpus.
-- `case_studies/` — every example discussed in the paper's appendices.
+- `case_studies/` — the case studies discussed in the paper's appendices.
 - `test/campaign/` — every model-written implication proof of the campaign
   (four prompt styles, 511 pairs, both directions), the prompts, a manifest
   with the checker's verdict and marks for each in default and in strict
   mode, and a runner that re-checks a style and prints the paper's table;
   see its README.
-- `test/results/` — the per-pair record behind Tables 1 to 5, one line per
+- `test/results/` — the per-pair record behind the paper's tables, one line per
   pair: the verdict of SemantEq-Eval and of the BEq+ port on the
   ProofNetVerif test split under both label sets, of the six ablation arms
   on the ablation set, and of every search configuration on the equivalent
@@ -216,16 +219,16 @@ reproduces every example discussed in its appendices.
 
 **Reproducing the tables from scratch.** `test/reproduce.sh` re-runs the
 programs on the released statements and proofs, stage by stage, and
-`test/reproduce.sh tables` prints Tables 1 to 5 from the fresh records:
+`test/reproduce.sh tables` prints the paper's tables from the fresh records:
 
 ```bash
 python3 test/pnv_fetch.py                  # ProofNetVerif from Hugging Face (needs `datasets`)
 test/reproduce.sh corpus                   # both modes, ~10 min
 test/reproduce.sh suites                   # ~30 min
 LANES=3 test/reproduce.sh ablation         # Table 2,  ~2 h (+6 h for the ProofNetVerif half)
-LANES=3 test/reproduce.sh campaign         # Tables 4 and 5, ~1.5 h
+LANES=3 test/reproduce.sh campaign         # Tables 3 and 4, ~1.5 h
 LANES=3 test/reproduce.sh pnv              # Table 1,  ~4 h
-LANES=3 test/reproduce.sh tiers            # Table 3,  days (TIER_ONLY='T0|d1w1|T1' for the excerpt rows)
+LANES=3 test/reproduce.sh tiers            # Tables 5 and 6, days (TIER_ONLY='T0|d1w1|T1' for the excerpt rows)
 test/reproduce.sh tables
 ```
 

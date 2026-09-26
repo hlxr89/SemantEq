@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Reproduce the paper's results FROM SCRATCH: every stage re-runs the programs on the
 # released statements and proofs; `tables` distils the fresh records to one line per pair
-# and prints Tables 1-5 from them (test/reproduce_tables.py). Nothing here reads test/results/
+# and prints the paper's tables from them (test/reproduce_tables.py). Nothing here reads test/results/
 # except for the BEq+ rows (see below).
 #
 #   test/reproduce.sh corpus      proof-audit corpus, default and strict mode        (~10 min)
 #   test/reproduce.sh suites      recall suite + the constructed half of the ablation set (~30 min)
 #   test/reproduce.sh ablation    the six ablation arms -> Table 2                     (~2 h; +6 h with the ProofNetVerif half)
-#   test/reproduce.sh campaign    the checker over the campaign proofs -> Tables 4, 5  (~4 h, ~1.5 h with LANES=3)
+#   test/reproduce.sh campaign    the checker over the campaign proofs -> Tables 3, 4  (~4 h, ~1.5 h with LANES=3)
 #   test/reproduce.sh pnv         SemantEq-Eval over the ProofNetVerif test split -> Table 1 (~12 h, ~4 h with LANES=3)
-#   test/reproduce.sh tiers       the eleven search configurations over the equivalent set -> Table 3 (days; see below)
-#   test/reproduce.sh tables      assemble the fresh verdict tables and print Tables 1-5
+#   test/reproduce.sh tiers       the eleven search configurations over the equivalent set -> Tables 5, 6 (days; see below)
+#   test/reproduce.sh tables      assemble the fresh verdict tables and print the paper's tables
 #
 # ProofNetVerif is not redistributed: `python3 test/pnv_fetch.py` downloads it and writes
 # test/data/{pnv_test.jsonl, ablation_pnv.jsonl, equivalent_set.jsonl}; the stages that need

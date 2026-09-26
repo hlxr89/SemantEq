@@ -8,15 +8,15 @@
 {"id": "pnv:test:0007:Dummit-Foote|exercise_8_3_6b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0008:Artin|exercise_10_6_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0009:Putnam|exercise_2018_a5", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0010:Munkres|exercise_29_4", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0010:Munkres|exercise_29_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0011:Herstein|exercise_2_2_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0012:Axler|exercise_6_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0014:Herstein|exercise_5_4_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0015:Herstein|exercise_4_6_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0018:Rudin|exercise_2_19a", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0020:Dummit-Foote|exercise_7_2_2", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0020:Dummit-Foote|exercise_7_2_2", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0021:Munkres|exercise_16_6", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0022:Rudin|exercise_1_4", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0022:Rudin|exercise_1_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0023:Shakarchi|exercise_2_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0024:Rudin|exercise_2_25", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0026:Artin|exercise_10_4_7a", "correct": true, "provenance": "unchanged"}
@@ -30,7 +30,7 @@
 {"id": "pnv:test:0034:Artin|exercise_10_4_7a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0035:Munkres|exercise_23_6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0036:Axler|exercise_1_2", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0038:Rudin|exercise_1_4", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0038:Rudin|exercise_1_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0039:Rudin|exercise_4_5b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0040:Munkres|exercise_30_10", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0041:Munkres|exercise_26_12", "correct": false, "provenance": "unchanged"}
@@ -54,7 +54,7 @@
 {"id": "pnv:test:0065:Munkres|exercise_16_6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0066:Shakarchi|exercise_2_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0067:Artin|exercise_6_4_2", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0068:Artin|exercise_3_7_2", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0068:Artin|exercise_3_7_2", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0069:Artin|exercise_10_1_13", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0070:Munkres|exercise_30_10", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0071:Dummit-Foote|exercise_8_2_4", "correct": false, "provenance": "unchanged"}
@@ -90,8 +90,8 @@
 {"id": "pnv:test:0103:Herstein|exercise_5_1_8", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0105:Dummit-Foote|exercise_3_2_16", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0106:Ireland-Rosen|exercise_2_4", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0108:Axler|exercise_3_8", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
-{"id": "pnv:test:0109:Munkres|exercise_16_6", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0108:Axler|exercise_3_8", "correct": false, "provenance": "changed"}
+{"id": "pnv:test:0109:Munkres|exercise_16_6", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0110:Rudin|exercise_4_15", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0112:Artin|exercise_2_3_2", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0113:Dummit-Foote|exercise_7_3_16", "correct": true, "provenance": "unchanged"}
@@ -117,7 +117,7 @@
 {"id": "pnv:test:0134:Putnam|exercise_1998_b6", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0135:Herstein|exercise_5_6_14", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0136:Dummit-Foote|exercise_1_1_17", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0137:Pugh|exercise_2_92", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:0137:Pugh|exercise_2_92", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0138:Munkres|exercise_23_6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0139:Munkres|exercise_21_6b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0142:Artin|exercise_11_2_13", "correct": false, "provenance": "unchanged"}
@@ -132,14 +132,14 @@
 {"id": "pnv:test:0154:Dummit-Foote|exercise_8_3_6b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0155:Rudin|exercise_5_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0156:Munkres|exercise_23_3", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0157:Ireland-Rosen|exercise_2_27a", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0157:Ireland-Rosen|exercise_2_27a", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0158:Putnam|exercise_2001_a5", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0160:Dummit-Foote|exercise_3_2_16", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0162:Rudin|exercise_4_3", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0163:Herstein|exercise_2_2_6c", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0164:Munkres|exercise_20_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0165:Dummit-Foote|exercise_7_2_2", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0167:Dummit-Foote|exercise_1_6_23", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0167:Dummit-Foote|exercise_1_6_23", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0168:Munkres|exercise_23_3", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0169:Herstein|exercise_2_7_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0170:Artin|exercise_2_3_2", "correct": false, "provenance": "unchanged"}
@@ -178,7 +178,7 @@
 {"id": "pnv:test:0207:Dummit-Foote|exercise_1_1_17", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0208:Rudin|exercise_2_29", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0211:Munkres|exercise_32_2c", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0212:Artin|exercise_2_8_6", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0212:Artin|exercise_2_8_6", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0213:Artin|exercise_2_3_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0214:Pugh|exercise_2_26", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0215:Munkres|exercise_31_1", "correct": true, "provenance": "unchanged"}
@@ -217,7 +217,7 @@
 {"id": "pnv:test:0250:Ireland-Rosen|exercise_2_27a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0251:Rudin|exercise_2_29", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0252:Ireland-Rosen|exercise_4_6", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0253:Pugh|exercise_2_92", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:0253:Pugh|exercise_2_92", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0254:Artin|exercise_11_2_13", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0255:Artin|exercise_2_3_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0256:Dummit-Foote|exercise_7_3_16", "correct": false, "provenance": "unchanged"}
@@ -256,7 +256,7 @@
 {"id": "pnv:test:0290:Ireland-Rosen|exercise_4_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0291:Artin|exercise_10_4_7a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0292:Munkres|exercise_22_5", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0293:Rudin|exercise_1_4", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:0293:Rudin|exercise_1_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0294:Ireland-Rosen|exercise_2_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0295:Herstein|exercise_2_11_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0296:Herstein|exercise_4_6_2", "correct": true, "provenance": "unchanged"}
@@ -268,12 +268,12 @@
 {"id": "pnv:test:0303:Herstein|exercise_3_2_21", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0304:Rudin|exercise_4_5b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0305:Dummit-Foote|exercise_1_1_29", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0306:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0306:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0307:Ireland-Rosen|exercise_3_4", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0308:Herstein|exercise_5_1_8", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0309:Herstein|exercise_2_2_6c", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0310:Putnam|exercise_2018_b4", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0311:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0311:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0312:Ireland-Rosen|exercise_3_4", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0313:Dummit-Foote|exercise_3_2_16", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0314:Putnam|exercise_2014_a5", "correct": false, "provenance": "unchanged"}
@@ -294,12 +294,12 @@
 {"id": "pnv:test:0335:Munkres|exercise_13_4b2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0336:Dummit-Foote|exercise_9_4_2a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0337:Herstein|exercise_4_2_6", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0338:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0338:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0340:Artin|exercise_11_2_13", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0341:Herstein|exercise_2_2_6c", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0342:Munkres|exercise_32_2a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0343:Axler|exercise_5_13", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0345:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0345:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0346:Rudin|exercise_4_4b", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0347:Ireland-Rosen|exercise_3_10", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0348:Rudin|exercise_5_3", "correct": false, "provenance": "unchanged"}
@@ -319,7 +319,7 @@
 {"id": "pnv:test:0362:Rudin|exercise_1_1b", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0363:Putnam|exercise_1999_b4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0364:Axler|exercise_1_4", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0365:Dummit-Foote|exercise_1_6_23", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0365:Dummit-Foote|exercise_1_6_23", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0366:Herstein|exercise_2_7_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0367:Herstein|exercise_2_2_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0368:Herstein|exercise_2_2_6c", "correct": true, "provenance": "unchanged"}
@@ -328,11 +328,11 @@
 {"id": "pnv:test:0372:Rudin|exercise_4_5b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0373:Herstein|exercise_2_7_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0375:Herstein|exercise_3_2_21", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0376:Pugh|exercise_3_63a", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0376:Pugh|exercise_3_63a", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0377:Dummit-Foote|exercise_1_1_2a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0378:Herstein|exercise_4_3_1", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0379:Rudin|exercise_1_18b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
-{"id": "pnv:test:0381:Munkres|exercise_34_9", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0379:Rudin|exercise_1_18b", "correct": false, "provenance": "changed"}
+{"id": "pnv:test:0381:Munkres|exercise_34_9", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0383:Dummit-Foote|exercise_4_5_21", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0384:Dummit-Foote|exercise_9_4_2a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0385:Putnam|exercise_2018_b4", "correct": false, "provenance": "unchanged"}
@@ -352,7 +352,7 @@
 {"id": "pnv:test:0401:Munkres|exercise_31_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0402:Dummit-Foote|exercise_1_1_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0403:Rudin|exercise_4_21a", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0404:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0404:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0406:Herstein|exercise_5_3_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0407:Dummit-Foote|exercise_3_4_5b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0408:Dummit-Foote|exercise_3_2_8", "correct": false, "provenance": "unchanged"}
@@ -373,11 +373,11 @@
 {"id": "pnv:test:0424:Munkres|exercise_13_8a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0426:Munkres|exercise_13_8a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0427:Putnam|exercise_2018_a5", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0428:Axler|exercise_1_4", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0428:Axler|exercise_1_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0429:Dummit-Foote|exercise_3_1_22a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0430:Artin|exercise_2_3_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0431:Herstein|exercise_5_6_14", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0432:Axler|exercise_5_1", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0432:Axler|exercise_5_1", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0433:Dummit-Foote|exercise_1_1_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0434:Munkres|exercise_13_4b2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0436:Dummit-Foote|exercise_7_3_16", "correct": true, "provenance": "unchanged"}
@@ -396,11 +396,11 @@
 {"id": "pnv:test:0451:Rudin|exercise_4_5b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0452:Dummit-Foote|exercise_4_5_21", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0453:Axler|exercise_1_9", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0454:Axler|exercise_1_9", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0454:Axler|exercise_1_9", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0455:Pugh|exercise_2_26", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0456:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0456:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0457:Munkres|exercise_18_8a", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0459:Herstein|exercise_3_2_21", "correct": false, "provenance": "flipped True->False (ledger 42): involved Fintype mint caught by instance-slot strictness; tier flag vindicated"}
+{"id": "pnv:test:0459:Herstein|exercise_3_2_21", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0460:Rudin|exercise_1_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0461:Putnam|exercise_1998_b6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0462:Munkres|exercise_18_13", "correct": false, "provenance": "unchanged"}
@@ -424,7 +424,7 @@
 {"id": "pnv:test:0482:Dummit-Foote|exercise_9_4_9", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0483:Rudin|exercise_2_25", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0484:Munkres|exercise_13_4b2", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0485:Munkres|exercise_22_5", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0485:Munkres|exercise_22_5", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0486:Pugh|exercise_2_92", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0487:Pugh|exercise_2_26", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0488:Dummit-Foote|exercise_4_4_2", "correct": false, "provenance": "unchanged"}
@@ -432,7 +432,7 @@
 {"id": "pnv:test:0490:Herstein|exercise_2_2_6c", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0491:Munkres|exercise_32_2a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0492:Putnam|exercise_2014_a5", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0493:Munkres|exercise_34_9", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0493:Munkres|exercise_34_9", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0494:Herstein|exercise_4_6_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0495:Dummit-Foote|exercise_9_4_2a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0496:Putnam|exercise_2018_a5", "correct": false, "provenance": "unchanged"}
@@ -442,10 +442,10 @@
 {"id": "pnv:test:0500:Herstein|exercise_5_1_8", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0501:Rudin|exercise_4_5b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0503:Rudin|exercise_4_21a", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0504:Dummit-Foote|exercise_7_2_2", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0504:Dummit-Foote|exercise_7_2_2", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0505:Axler|exercise_1_9", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0506:Artin|exercise_11_4_6c", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0507:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0507:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0508:Putnam|exercise_2001_a5", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0509:Pugh|exercise_3_1", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0511:Herstein|exercise_2_1_26", "correct": false, "provenance": "unchanged"}
@@ -464,8 +464,8 @@
 {"id": "pnv:test:0525:Ireland-Rosen|exercise_3_4", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0526:Artin|exercise_3_2_7", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0527:Pugh|exercise_2_26", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0528:Pugh|exercise_2_92", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
-{"id": "pnv:test:0530:Dummit-Foote|exercise_4_5_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0528:Pugh|exercise_2_92", "correct": false, "provenance": "changed"}
+{"id": "pnv:test:0530:Dummit-Foote|exercise_4_5_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0531:Herstein|exercise_5_6_14", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0532:Herstein|exercise_5_3_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0533:Herstein|exercise_2_3_16", "correct": false, "provenance": "unchanged"}
@@ -476,8 +476,8 @@
 {"id": "pnv:test:0539:Dummit-Foote|exercise_1_1_22b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0542:Pugh|exercise_3_1", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0543:Dummit-Foote|exercise_2_4_16c", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0544:Pugh|exercise_3_63a", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
-{"id": "pnv:test:0546:Artin|exercise_2_8_6", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0544:Pugh|exercise_3_63a", "correct": false, "provenance": "changed"}
+{"id": "pnv:test:0546:Artin|exercise_2_8_6", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0547:Dummit-Foote|exercise_9_4_2c", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0548:Axler|exercise_1_4", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0549:Ireland-Rosen|exercise_5_28", "correct": false, "provenance": "unchanged"}
@@ -489,26 +489,26 @@
 {"id": "pnv:test:0556:Ireland-Rosen|exercise_5_28", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0557:Ireland-Rosen|exercise_4_6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0558:Munkres|exercise_32_2c", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0559:Munkres|exercise_16_6", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0559:Munkres|exercise_16_6", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0560:Artin|exercise_11_4_6a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0561:Herstein|exercise_4_6_2", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0563:Munkres|exercise_22_5", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0563:Munkres|exercise_22_5", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0564:Pugh|exercise_2_92", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0565:Rudin|exercise_5_5", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0566:Ireland-Rosen|exercise_4_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0567:Ireland-Rosen|exercise_5_28", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0568:Dummit-Foote|exercise_1_1_17", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0569:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0569:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0570:Munkres|exercise_43_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0571:Rudin|exercise_2_27b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0572:Rudin|exercise_4_21a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0573:Artin|exercise_6_4_12", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0574:Pugh|exercise_2_92", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0575:Munkres|exercise_32_2c", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0576:Rudin|exercise_5_3", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0576:Rudin|exercise_5_3", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0577:Munkres|exercise_20_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0578:Pugh|exercise_2_92", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0579:Rudin|exercise_1_4", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0579:Rudin|exercise_1_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0580:Rudin|exercise_3_5", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0581:Putnam|exercise_2001_a5", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0582:Dummit-Foote|exercise_8_2_4", "correct": false, "provenance": "unchanged"}
@@ -522,14 +522,14 @@
 {"id": "pnv:test:0590:Pugh|exercise_2_92", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0591:Munkres|exercise_32_2c", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0592:Rudin|exercise_4_5b", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0595:Dummit-Foote|exercise_1_6_23", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0595:Dummit-Foote|exercise_1_6_23", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0596:Herstein|exercise_2_7_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0597:Putnam|exercise_1998_b6", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0598:Putnam|exercise_2001_a5", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0599:Munkres|exercise_31_1", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0600:Herstein|exercise_2_2_6c", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0601:Herstein|exercise_5_1_8", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0603:Munkres|exercise_16_6", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0603:Munkres|exercise_16_6", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0604:Munkres|exercise_24_3a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0605:Dummit-Foote|exercise_9_4_9", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0606:Ireland-Rosen|exercise_3_10", "correct": false, "provenance": "unchanged"}
@@ -542,7 +542,7 @@
 {"id": "pnv:test:0613:Munkres|exercise_13_4a2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0614:Herstein|exercise_4_6_2", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0615:Artin|exercise_3_2_7", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0616:Herstein|exercise_2_5_52", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0616:Herstein|exercise_2_5_52", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0617:Munkres|exercise_21_6b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0618:Herstein|exercise_2_11_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0619:Ireland-Rosen|exercise_3_4", "correct": true, "provenance": "unchanged"}
@@ -550,14 +550,14 @@
 {"id": "pnv:test:0621:Ireland-Rosen|exercise_5_28", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0622:Dummit-Foote|exercise_9_4_2c", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0623:Herstein|exercise_2_10_1", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0624:Axler|exercise_5_24", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0624:Axler|exercise_5_24", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0625:Dummit-Foote|exercise_3_4_5b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0626:Putnam|exercise_2001_a5", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0627:Dummit-Foote|exercise_9_4_2c", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0628:Rudin|exercise_5_17", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0630:Ireland-Rosen|exercise_4_6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0631:Munkres|exercise_32_2a", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0632:Dummit-Foote|exercise_7_2_2", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0632:Dummit-Foote|exercise_7_2_2", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0633:Munkres|exercise_32_2a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0634:Herstein|exercise_2_10_1", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0635:Rudin|exercise_4_8a", "correct": false, "provenance": "unchanged"}
@@ -570,21 +570,21 @@
 {"id": "pnv:test:0643:Rudin|exercise_3_5", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0644:Ireland-Rosen|exercise_3_4", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0645:Rudin|exercise_4_8a", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0646:Axler|exercise_5_1", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0646:Axler|exercise_5_1", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0647:Artin|exercise_11_4_6a", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0648:Herstein|exercise_5_3_7", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:0648:Herstein|exercise_5_3_7", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0649:Munkres|exercise_20_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0650:Dummit-Foote|exercise_1_1_20", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0651:Dummit-Foote|exercise_1_1_17", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0652:Herstein|exercise_4_3_1", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0654:Dummit-Foote|exercise_9_4_9", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0655:Axler|exercise_1_4", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0655:Axler|exercise_1_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0656:Putnam|exercise_2018_a5", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0657:Artin|exercise_3_7_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0658:Rudin|exercise_4_1a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0659:Dummit-Foote|exercise_8_3_5a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0660:Rudin|exercise_4_4b", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0661:Axler|exercise_5_24", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0661:Axler|exercise_5_24", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0663:Dummit-Foote|exercise_2_4_16a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0664:Herstein|exercise_2_1_26", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0665:Pugh|exercise_3_63a", "correct": false, "provenance": "unchanged"}
@@ -593,10 +593,10 @@
 {"id": "pnv:test:0669:Munkres|exercise_31_1", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0670:Axler|exercise_1_9", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0671:Rudin|exercise_1_1b", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0672:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0672:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0673:Ireland-Rosen|exercise_12_12", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0678:Munkres|exercise_22_5", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
-{"id": "pnv:test:0679:Herstein|exercise_2_5_52", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0678:Munkres|exercise_22_5", "correct": false, "provenance": "changed"}
+{"id": "pnv:test:0679:Herstein|exercise_2_5_52", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0680:Munkres|exercise_13_8a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0681:Ireland-Rosen|exercise_4_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0682:Rudin|exercise_4_3", "correct": false, "provenance": "unchanged"}
@@ -611,7 +611,7 @@
 {"id": "pnv:test:0692:Dummit-Foote|exercise_9_1_10", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0693:Axler|exercise_1_4", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0694:Axler|exercise_6_3", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0695:Pugh|exercise_3_63a", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0695:Pugh|exercise_3_63a", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0696:Dummit-Foote|exercise_7_1_12", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0697:Dummit-Foote|exercise_1_1_17", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0698:Munkres|exercise_28_6", "correct": false, "provenance": "unchanged"}
@@ -624,7 +624,7 @@
 {"id": "pnv:test:0706:Axler|exercise_6_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0707:Rudin|exercise_2_25", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0708:Dummit-Foote|exercise_3_2_16", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0709:Herstein|exercise_2_2_3", "correct": true, "provenance": "unchanged"}
+{"id": "pnv:test:0709:Herstein|exercise_2_2_3", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0710:Munkres|exercise_32_2a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0711:Herstein|exercise_4_2_6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0713:Ireland-Rosen|exercise_5_28", "correct": false, "provenance": "unchanged"}
@@ -651,11 +651,11 @@
 {"id": "pnv:test:0735:Putnam|exercise_1998_b6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0736:Munkres|exercise_13_8a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0737:Herstein|exercise_3_2_21", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0738:Pugh|exercise_3_63a", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0738:Pugh|exercise_3_63a", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0739:Munkres|exercise_26_12", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0740:Axler|exercise_1_9", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0741:Putnam|exercise_2018_a5", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0742:Axler|exercise_5_1", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0742:Axler|exercise_5_1", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0743:Ireland-Rosen|exercise_3_10", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0744:Shakarchi|exercise_3_14", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0745:Rudin|exercise_4_5b", "correct": false, "provenance": "unchanged"}
@@ -671,11 +671,11 @@
 {"id": "pnv:test:0757:Dummit-Foote|exercise_1_1_15", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0758:Dummit-Foote|exercise_4_5_33", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0759:Rudin|exercise_4_3", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0760:Axler|exercise_1_9", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0760:Axler|exercise_1_9", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0761:Herstein|exercise_2_5_23", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0762:Putnam|exercise_2018_b4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0763:Dummit-Foote|exercise_1_3_8", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0764:Pugh|exercise_2_92", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0764:Pugh|exercise_2_92", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0765:Herstein|exercise_5_4_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0766:Ireland-Rosen|exercise_4_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0767:Munkres|exercise_13_4b2", "correct": false, "provenance": "unchanged"}
@@ -689,18 +689,18 @@
 {"id": "pnv:test:0775:Pugh|exercise_2_46", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0776:Dummit-Foote|exercise_7_4_27", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0777:Munkres|exercise_30_10", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0778:Dummit-Foote|exercise_4_5_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0778:Dummit-Foote|exercise_4_5_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0779:Shakarchi|exercise_1_13b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0780:Munkres|exercise_24_3a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0781:Munkres|exercise_28_6", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0782:Munkres|exercise_18_8a", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0782:Munkres|exercise_18_8a", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0783:Artin|exercise_2_3_2", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0784:Pugh|exercise_2_46", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:0784:Pugh|exercise_2_46", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0785:Artin|exercise_3_2_7", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0786:Axler|exercise_6_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0787:Rudin|exercise_2_19a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0788:Dummit-Foote|exercise_2_4_16a", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0789:Ireland-Rosen|exercise_3_10", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0789:Ireland-Rosen|exercise_3_10", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0790:Artin|exercise_2_3_2", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0791:Munkres|exercise_23_3", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0793:Rudin|exercise_5_5", "correct": false, "provenance": "unchanged"}
@@ -715,7 +715,7 @@
 {"id": "pnv:test:0802:Ireland-Rosen|exercise_3_10", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0803:Herstein|exercise_2_5_43", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0804:Rudin|exercise_4_21a", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0805:Munkres|exercise_22_5", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0805:Munkres|exercise_22_5", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0806:Putnam|exercise_1998_b6", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0807:Ireland-Rosen|exercise_3_10", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0808:Pugh|exercise_2_32a", "correct": true, "provenance": "unchanged"}
@@ -803,8 +803,8 @@
 {"id": "pnv:test:0895:Pugh|exercise_2_46", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0896:Dummit-Foote|exercise_4_5_15", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0897:Herstein|exercise_5_3_7", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0898:Munkres|exercise_31_3", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
-{"id": "pnv:test:0899:Herstein|exercise_2_5_52", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0898:Munkres|exercise_31_3", "correct": false, "provenance": "changed"}
+{"id": "pnv:test:0899:Herstein|exercise_2_5_52", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0900:Dummit-Foote|exercise_11_1_13", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0902:Dummit-Foote|exercise_9_1_10", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0904:Munkres|exercise_26_12", "correct": false, "provenance": "unchanged"}
@@ -815,7 +815,7 @@
 {"id": "pnv:test:0910:Rudin|exercise_2_25", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0911:Axler|exercise_5_13", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0912:Shakarchi|exercise_3_14", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:0913:Axler|exercise_5_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0913:Axler|exercise_5_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0914:Munkres|exercise_43_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0915:Herstein|exercise_5_4_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0916:Pugh|exercise_4_15a", "correct": false, "provenance": "unchanged"}
@@ -850,7 +850,7 @@
 {"id": "pnv:test:0949:Herstein|exercise_4_5_23", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0950:Rudin|exercise_2_19a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0951:Munkres|exercise_18_13", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0953:Pugh|exercise_2_46", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0953:Pugh|exercise_2_46", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0954:Munkres|exercise_18_8a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0955:Putnam|exercise_2018_b4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0956:Dummit-Foote|exercise_8_3_5a", "correct": false, "provenance": "unchanged"}
@@ -871,7 +871,7 @@
 {"id": "pnv:test:0972:Artin|exercise_11_4_6c", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0973:Dummit-Foote|exercise_4_5_23", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:0975:Dummit-Foote|exercise_2_4_16a", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0976:Herstein|exercise_4_4_9", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0976:Herstein|exercise_4_4_9", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0977:Rudin|exercise_5_17", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0978:Munkres|exercise_28_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0979:Dummit-Foote|exercise_9_4_2c", "correct": false, "provenance": "unchanged"}
@@ -886,11 +886,11 @@
 {"id": "pnv:test:0989:Dummit-Foote|exercise_9_1_10", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0990:Artin|exercise_3_2_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0991:Munkres|exercise_32_2c", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0992:Pugh|exercise_2_92", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:0992:Pugh|exercise_2_92", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0993:Rudin|exercise_3_5", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0994:Munkres|exercise_21_6b", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:0995:Rudin|exercise_4_4b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
-{"id": "pnv:test:0996:Dummit-Foote|exercise_1_6_23", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:0995:Rudin|exercise_4_4b", "correct": false, "provenance": "changed"}
+{"id": "pnv:test:0996:Dummit-Foote|exercise_1_6_23", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:0997:Herstein|exercise_2_2_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0998:Herstein|exercise_4_2_6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:0999:Munkres|exercise_18_8a", "correct": true, "provenance": "unchanged"}
@@ -902,7 +902,7 @@
 {"id": "pnv:test:1007:Munkres|exercise_32_2c", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1008:Dummit-Foote|exercise_2_4_16a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1009:Axler|exercise_6_3", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1010:Herstein|exercise_2_5_52", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1010:Herstein|exercise_2_5_52", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1011:Rudin|exercise_4_4b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1012:Munkres|exercise_43_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1013:Herstein|exercise_4_6_2", "correct": true, "provenance": "unchanged"}
@@ -917,7 +917,7 @@
 {"id": "pnv:test:1023:Herstein|exercise_2_5_23", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1024:Herstein|exercise_4_4_9", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1025:Herstein|exercise_4_2_6", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1026:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1026:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1027:Ireland-Rosen|exercise_3_4", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1028:Munkres|exercise_21_6b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1029:Artin|exercise_3_7_2", "correct": false, "provenance": "unchanged"}
@@ -929,11 +929,11 @@
 {"id": "pnv:test:1037:Munkres|exercise_32_2c", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1038:Pugh|exercise_3_63a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1039:Dummit-Foote|exercise_3_2_16", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1040:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
-{"id": "pnv:test:1041:Pugh|exercise_2_92", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1040:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "changed"}
+{"id": "pnv:test:1041:Pugh|exercise_2_92", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1042:Dummit-Foote|exercise_7_3_16", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1043:Ireland-Rosen|exercise_3_10", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1044:Munkres|exercise_18_8a", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1044:Munkres|exercise_18_8a", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1045:Herstein|exercise_5_1_8", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1046:Dummit-Foote|exercise_4_4_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1047:Rudin|exercise_4_4b", "correct": false, "provenance": "unchanged"}
@@ -942,7 +942,7 @@
 {"id": "pnv:test:1050:Rudin|exercise_1_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1051:Rudin|exercise_2_25", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1053:Herstein|exercise_4_6_2", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1054:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1054:Dummit-Foote|exercise_4_4_6b", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1055:Pugh|exercise_2_32a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1056:Dummit-Foote|exercise_1_1_20", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1057:Pugh|exercise_3_63a", "correct": false, "provenance": "unchanged"}
@@ -962,13 +962,13 @@
 {"id": "pnv:test:1072:Rudin|exercise_3_21", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1073:Herstein|exercise_2_2_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1074:Herstein|exercise_4_6_2", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1075:Rudin|exercise_1_4", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1075:Rudin|exercise_1_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1076:Ireland-Rosen|exercise_12_12", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1077:Pugh|exercise_2_46", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1078:Dummit-Foote|exercise_4_5_23", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1079:Dummit-Foote|exercise_3_1_22a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1080:Putnam|exercise_2001_a5", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1081:Pugh|exercise_2_92", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:1081:Pugh|exercise_2_92", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1082:Pugh|exercise_2_46", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1083:Herstein|exercise_2_2_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1084:Artin|exercise_6_4_2", "correct": true, "provenance": "unchanged"}
@@ -977,9 +977,9 @@
 {"id": "pnv:test:1087:Herstein|exercise_2_1_26", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1088:Dummit-Foote|exercise_7_1_12", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1089:Munkres|exercise_23_6", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1090:Rudin|exercise_1_18b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1090:Rudin|exercise_1_18b", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1091:Artin|exercise_6_4_12", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1092:Rudin|exercise_1_4", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:1092:Rudin|exercise_1_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1093:Pugh|exercise_2_32a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1094:Pugh|exercise_2_46", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1095:Rudin|exercise_1_18b", "correct": false, "provenance": "unchanged"}
@@ -988,7 +988,7 @@
 {"id": "pnv:test:1099:Herstein|exercise_2_5_52", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1100:Pugh|exercise_2_26", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1101:Axler|exercise_1_2", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1102:Shakarchi|exercise_1_13b", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1102:Shakarchi|exercise_1_13b", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1103:Dummit-Foote|exercise_7_1_2", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1104:Herstein|exercise_2_7_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1105:Rudin|exercise_4_1a", "correct": false, "provenance": "unchanged"}
@@ -997,9 +997,9 @@
 {"id": "pnv:test:1109:Pugh|exercise_2_46", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1110:Munkres|exercise_26_12", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1111:Rudin|exercise_4_11a", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1112:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1112:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1113:Ireland-Rosen|exercise_4_6", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1114:Pugh|exercise_2_92", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:1114:Pugh|exercise_2_92", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1115:Herstein|exercise_5_3_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1116:Herstein|exercise_5_1_8", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1117:Munkres|exercise_23_6", "correct": false, "provenance": "unchanged"}
@@ -1031,7 +1031,7 @@
 {"id": "pnv:test:1143:Rudin|exercise_1_8", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1144:Ireland-Rosen|exercise_4_6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1145:Rudin|exercise_4_15", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1146:Munkres|exercise_18_8a", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1146:Munkres|exercise_18_8a", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1147:Artin|exercise_3_7_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1148:Rudin|exercise_4_3", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1149:Artin|exercise_10_4_7a", "correct": true, "provenance": "unchanged"}
@@ -1080,26 +1080,26 @@
 {"id": "pnv:test:1195:Dummit-Foote|exercise_7_4_27", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1196:Putnam|exercise_2018_a5", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1198:Herstein|exercise_5_6_14", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1199:Munkres|exercise_34_9", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
-{"id": "pnv:test:1201:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1199:Munkres|exercise_34_9", "correct": false, "provenance": "changed"}
+{"id": "pnv:test:1201:Dummit-Foote|exercise_2_1_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1203:Herstein|exercise_2_5_52", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1204:Dummit-Foote|exercise_8_3_5a", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1205:Dummit-Foote|exercise_1_6_23", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1205:Dummit-Foote|exercise_1_6_23", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1206:Dummit-Foote|exercise_3_4_5b", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1208:Putnam|exercise_1999_b4", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1209:Herstein|exercise_4_6_2", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1210:Munkres|exercise_30_10", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1211:Axler|exercise_5_13", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1212:Munkres|exercise_18_8a", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1212:Munkres|exercise_18_8a", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1213:Dummit-Foote|exercise_7_4_27", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1214:Herstein|exercise_2_11_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1215:Artin|exercise_10_1_13", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1216:Munkres|exercise_33_7", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1217:Herstein|exercise_5_1_8", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1218:Ireland-Rosen|exercise_3_10", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1218:Ireland-Rosen|exercise_3_10", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1219:Putnam|exercise_1999_b4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1220:Putnam|exercise_2018_b4", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1221:Rudin|exercise_1_4", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:1221:Rudin|exercise_1_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1222:Dummit-Foote|exercise_4_5_19", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1224:Artin|exercise_10_4_7a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1226:Munkres|exercise_23_6", "correct": false, "provenance": "unchanged"}
@@ -1109,7 +1109,7 @@
 {"id": "pnv:test:1230:Dummit-Foote|exercise_9_4_2a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1231:Rudin|exercise_1_18b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1232:Rudin|exercise_4_11a", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1233:Artin|exercise_2_8_6", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:1233:Artin|exercise_2_8_6", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1234:Putnam|exercise_2018_a5", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1235:Dummit-Foote|exercise_4_4_8a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1236:Dummit-Foote|exercise_7_1_12", "correct": true, "provenance": "unchanged"}
@@ -1140,7 +1140,7 @@
 {"id": "pnv:test:1264:Munkres|exercise_13_4b2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1265:Rudin|exercise_1_18b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1266:Dummit-Foote|exercise_9_4_2a", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1268:Ireland-Rosen|exercise_3_4", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1268:Ireland-Rosen|exercise_3_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1269:Artin|exercise_11_4_6a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1270:Rudin|exercise_4_21a", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1271:Munkres|exercise_24_3a", "correct": false, "provenance": "unchanged"}
@@ -1153,7 +1153,7 @@
 {"id": "pnv:test:1278:Herstein|exercise_4_2_6", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1279:Artin|exercise_6_4_12", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1282:Dummit-Foote|exercise_4_5_21", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1283:Dummit-Foote|exercise_4_5_13", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1283:Dummit-Foote|exercise_4_5_13", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1284:Dummit-Foote|exercise_1_1_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1285:Munkres|exercise_16_6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1287:Herstein|exercise_2_1_26", "correct": true, "provenance": "unchanged"}
@@ -1181,7 +1181,7 @@
 {"id": "pnv:test:1313:Artin|exercise_3_2_7", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1314:Munkres|exercise_16_6", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1315:Putnam|exercise_2018_b4", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1316:Artin|exercise_2_8_6", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1316:Artin|exercise_2_8_6", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1317:Rudin|exercise_4_8a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1318:Shakarchi|exercise_3_14", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1319:Dummit-Foote|exercise_4_4_2", "correct": false, "provenance": "unchanged"}
@@ -1195,11 +1195,11 @@
 {"id": "pnv:test:1328:Rudin|exercise_4_15", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1329:Munkres|exercise_32_2c", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1330:Putnam|exercise_2001_a5", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1331:Munkres|exercise_22_5", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1331:Munkres|exercise_22_5", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1332:Munkres|exercise_18_13", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1333:Herstein|exercise_2_7_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1334:Rudin|exercise_4_5b", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1335:Munkres|exercise_34_9", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1335:Munkres|exercise_34_9", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1336:Munkres|exercise_23_3", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1337:Munkres|exercise_29_4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1338:Herstein|exercise_2_5_52", "correct": false, "provenance": "unchanged"}
@@ -1231,7 +1231,7 @@
 {"id": "pnv:test:1365:Rudin|exercise_5_17", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1366:Dummit-Foote|exercise_1_3_8", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1368:Herstein|exercise_2_7_7", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1370:Rudin|exercise_5_3", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1370:Rudin|exercise_5_3", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1371:Artin|exercise_3_2_7", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1372:Herstein|exercise_5_6_14", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1373:Herstein|exercise_5_1_8", "correct": false, "provenance": "unchanged"}
@@ -1266,7 +1266,7 @@
 {"id": "pnv:test:1404:Axler|exercise_1_2", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1405:Putnam|exercise_1999_b4", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1406:Artin|exercise_2_3_2", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1407:Herstein|exercise_2_2_3", "correct": true, "provenance": "unchanged"}
+{"id": "pnv:test:1407:Herstein|exercise_2_2_3", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1409:Dummit-Foote|exercise_9_4_9", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1410:Herstein|exercise_2_1_18", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1411:Rudin|exercise_4_4b", "correct": true, "provenance": "unchanged"}
@@ -1278,7 +1278,7 @@
 {"id": "pnv:test:1417:Artin|exercise_10_6_7", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1418:Dummit-Foote|exercise_7_4_27", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1421:Munkres|exercise_21_6b", "correct": false, "provenance": "unchanged"}
-{"id": "pnv:test:1422:Artin|exercise_11_13_3", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1422:Artin|exercise_11_13_3", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1423:Munkres|exercise_33_7", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1425:Rudin|exercise_2_19a", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1426:Dummit-Foote|exercise_3_2_16", "correct": true, "provenance": "unchanged"}
@@ -1298,6 +1298,6 @@
 {"id": "pnv:test:1443:Herstein|exercise_2_5_23", "correct": true, "provenance": "unchanged"}
 {"id": "pnv:test:1445:Shakarchi|exercise_1_13b", "correct": false, "provenance": "unchanged"}
 {"id": "pnv:test:1446:Pugh|exercise_3_1", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1448:Munkres|exercise_29_4", "correct": false, "provenance": "tier-flagged defect (never accepted; checker-campaign one-way evidence)"}
+{"id": "pnv:test:1448:Munkres|exercise_29_4", "correct": false, "provenance": "changed"}
 {"id": "pnv:test:1449:Dummit-Foote|exercise_1_1_29", "correct": true, "provenance": "unchanged"}
-{"id": "pnv:test:1450:Rudin|exercise_1_4", "correct": false, "provenance": "category-A: manually ruled non-equivalent (see adjudicated_labels.json)"}
+{"id": "pnv:test:1450:Rudin|exercise_1_4", "correct": false, "provenance": "changed"}

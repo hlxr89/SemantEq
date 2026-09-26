@@ -1,4 +1,4 @@
-# H2 — instantiating the antecedent at a foreign object (Appendix H)
+# H2 — instantiating the antecedent at a foreign object (Appendix J)
 
 The candidate states only that the image of one open set is open; the model
 proves the reference (the restriction is an open map) by feeding the

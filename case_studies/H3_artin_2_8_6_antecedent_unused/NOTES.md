@@ -1,4 +1,4 @@
-# H3 — not using the antecedent at all (Appendix H)
+# H3 — not using the antecedent at all (Appendix J)
 
 The reference states an isomorphism between the centre of a product group and
 the product of the centres; the candidate states that the centre of the
