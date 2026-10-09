@@ -1,10 +1,15 @@
-import SemantEq.Env
+import SemantEq.Config
+import SemantEq.Logic
 import SemantEq.Version
 import SemantEq.Compile
 import SemantEq.Statement
 import SemantEq.Context
 import SemantEq.Repackage
+import SemantEq.Audit
+import SemantEq.InstancePack
+import SemantEq.Structural
+import SemantEq.Arms
+import SemantEq.Gate
 import SemantEq.Search
 import SemantEq.Driver
-import SemantEq.Replay
 import SemantEq.ProofAudit

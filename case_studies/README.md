@@ -23,5 +23,5 @@ add `--raw` for the full JSON record.
 | `J3_artin_2_8_6_antecedent_unused/` | Appendix J | model proof refused (ref_imp_cand) |
 | `J4_imo_1983_p1_checker_loop/` | Appendix J | checker-in-the-loop overturns a label (pair ruled non-equivalent) |
 
-The campaign proofs (H1–H3) are verbatim model output from the four-style
+The campaign proofs (J1–J4) are verbatim model output from the four-style
 campaign; the pair statements are verbatim benchmark or suite entries.

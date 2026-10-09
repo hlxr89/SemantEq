@@ -16,11 +16,12 @@ test/**/results.strict.jsonl
 .DS_Store
 test/campaign/results/
 
-# not repository content (2026-09-25)
+# not repository content
 /Beq__*.pdf
 __pycache__/
 /commit_msg*.txt
 /scratch/
+/.claude/
 /equiv_proofs_lean4.28.1/
 
 # from-scratch reproduction outputs and downloaded data

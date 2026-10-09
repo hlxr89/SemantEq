@@ -40,6 +40,12 @@ unfolded, derivable duplicate instance binders dropped), and compares:
 α-equivalence yields `ExactMatch`, definitional equality yields `DefEq`, and
 anything past that goes to the implication search.
 
+### `SemantEq/Config.lean`, `SemantEq/Logic.lean` — shared ground
+`Config` holds everything read from the environment or the command line, once
+at start-up. `Logic` holds the vocabulary both programs grade constants by
+(core-logic names, the schematic test, the eliminator test, the bridge-grade
+conclusion test), the exception-safe wrappers and the heartbeat scoping.
+
 ### `SemantEq/Search.lean` — the search ladder (SemantEq-Eval)
 Each direction proves "target follows from the other statement" through a
 tiered ladder:
@@ -59,23 +65,43 @@ tiered ladder:
    structural closer.
 4. **Bounded multi-step search** — sequences of bridge applications explored
    breadth-first with strict caps on depth, vocabulary, frontier width, and
-   per-level budget. Optionally, each intermediate state can be re-probed for
-   fresh bridge lemmas, letting the vocabulary grow along the path.
+   per-level budget.
 
 Search strength (depth, arm and discovery budgets, deep-search caps) is
 exposed as CLI flags; the defaults favor precision and speed.
 
-### `SemantEq/RestrictedSearch.lean` — closers and audits
-The engine room: the structural closer, the rewrite/normalization arms, the
-instance-packaging machinery (constructing missing typeclass instances from
-material already in context), and the audit stack that judges every accepted
-proof:
+### `SemantEq/Structural.lean`, `SemantEq/InstancePack.lean` — the structural closer
+The antecedent is asserted into the context, its replumbing variants added,
+quantified hypotheses forward-instantiated against the locals, the context
+saturated, and `solveByElim` run over an explicit lemma list. Instance
+packaging constructs a typeclass instance the context does not hold from the
+material it does hold (curated moves plus a generated index of Mathlib's
+packaging lemmas).
 
+### `SemantEq/Repackage.lean` — the structure-repackaging arm
+For pairs whose preambles declare different-but-isomorphic structures: each
+side's structure values are rebuilt from the other side's fields (any atom of
+the facts pool by definitional equality, nested constructors, one audited
+rewrite bridge per field), the antecedent is applied to the repackaged
+hypotheses and the conclusion rebuilt. A no-op unless a pair-local structure
+occurs in the goal or the antecedent.
+
+### `SemantEq/Arms.lean` — the ladder's arms
+Normalization with the restricted simp set, the single-bridge `simp` and `rw`
+arms, the bounded multi-step deep search, and the restricted library search.
+Every accepting arm replays its transform without the antecedent:
+- **Antecedent-free replay** (counterfactual replay) — if the same transform
+  still closes the goal without the antecedent, the "correspondence" was
+  vacuous and the accept is discarded.
+
+### `SemantEq/Gate.lean` — the relevance audit
 - **Relevance audit** (essential-use gate) — the antecedent must do semantic work for *every
   part* of the goal. A candidate that is the real statement conjoined with
   independently-true padding is rejected even though a proof exists; shared
   content carried by *both* statements is explicitly legal. Runs before the
   ladder, so polluted directions are refused instead of searched.
+
+### `SemantEq/Audit.lean` — what an accepted proof may contain
 - **Proof-term grading** (proof audit) — the accepted proof term's constants are graded
   categorically: the antecedent must be reached, and everything else must be
   data, an eliminator, logically schematic plumbing, or an
@@ -84,12 +110,12 @@ proof:
 - **Explosion check** (polarity-aware ex falso) — proofs that manufacture `False` in
   positive position (deriving the goal from a contradiction rather than a
   correspondence) are rejected; honest proofs of negated goals are not.
-- **Antecedent-free replay** (counterfactual replay) — every accepting transform is replayed *without*
-  the antecedent; if it still closes, the "correspondence" was vacuous and
-  the accept is discarded.
 
-### `SemantEq/ProofAudit.lean` — the ProofChecker (SemantEq-ProofAudit)
-The same judgment, packaged for externally written proofs (`--proof`). A
+### `SemantEq/ProofAudit/` — the ProofChecker (SemantEq-ProofAudit)
+The same judgment, packaged for externally written proofs (`--proof`): the
+context and constant grading (`Ctx`), the node-level rules (`Rules`), the
+proof-term walk (`Walk`), the confiscated-instances reproof (`Reproof`) and the
+fixture protocol (`Fixture`). A
 fixture provides the assumed statement(s) as `sorry`-proved theorems and the
 goal with a real proof; the checker walks the proof with role- and
 polarity-aware constant grading, ablates local subproofs to confirm the
@@ -125,7 +151,9 @@ too).
 ### `SemantEq/Driver.lean`, `Main.lean` — orchestration
 Batch processing with per-pair streaming (each result is flushed the moment
 its pair finishes, so interrupted runs lose at most the pair in flight),
-verdict assembly from the two directions, and the CLI (batch mode, `--proof`
+verdict assembly from the two directions, the per-pair wall-clock limit (a
+watchdog sets a cancel token that every `runMetaM` hands to Lean's interrupt
+check; the pair then reports `Timeout`), and the CLI (batch mode, `--proof`
 mode, strength flags).
 
 ## Design principles

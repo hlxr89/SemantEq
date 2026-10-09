@@ -22,7 +22,8 @@
 # CHUNK=n pairs per process (default 40); STALL_SECS=s kills a chunk whose output has not
 # grown for s seconds and sets its first unfinished pair aside (default 900); LIMIT=n runs
 # only the first n pairs of every input (smoke test). Every stage is resumable: a finished
-# chunk is skipped on re-run.
+# chunk is skipped on re-run. The evaluator runs with its per-pair time limit off
+# (--timeout 0), as the paper's runs did.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 STAGE="${1:-}"; [ -n "$STAGE" ] || { sed -n 2,22p "$0"; exit 1; }
@@ -42,7 +43,7 @@ run_pairs () {
   local chunks=("$wd"/chunk_[0-9][0-9][0-9][0-9])
   run_chunk () { # one process per chunk; watchdog on the streamed stdout
     local c=$1; shift; [ -f "$c.out.jsonl" ] && return 0
-    ( env "$@" lake env "$BIN" --raw "$c" "$c.out.jsonl" > "$c.stream" 2> "$c.err" ) &
+    ( env "$@" lake env "$BIN" --raw --timeout 0 "$c" "$c.out.jsonl" > "$c.stream" 2> "$c.err" ) &
     local pid=$! last=0 same=0
     while kill -0 $pid 2>/dev/null; do
       sleep 15; local n; n=$(grep -c '"id"' "$c.stream" 2>/dev/null || echo 0)

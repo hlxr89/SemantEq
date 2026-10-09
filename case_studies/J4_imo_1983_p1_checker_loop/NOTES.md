@@ -3,7 +3,7 @@
 IMO 1983 Problem 1, a candidate autoformalized blind from the natural-language
 statement; it entered the recall suite labelled equivalent (a hand-written proof
 shows logical equivalence). The checker in the loop showed the label wrong and
-the pair is now non-equivalent (2026-09-24). The reference carries positivity in the type `ℝ+`; the
+the pair is now non-equivalent. The reference carries positivity in the type `ℝ+`; the
 candidate works over `ℝ` and restores positivity as a conjunct on the
 condition side of its biconditional. Every campaign style is rejected in both
 directions.

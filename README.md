@@ -26,7 +26,10 @@ repository realises the relation in two programs:
 
 Requirements: `git`, a C toolchain (`xcode-select --install` on macOS,
 `build-essential` on Linux), and [elan](https://github.com/leanprover/elan)
-(the Lean version manager):
+(the Lean version manager). There are two ways to install.
+
+**As its own project**, when the statements you want to judge import only
+Mathlib:
 
 ```bash
 curl https://elan.lean-lang.org/elan-init.sh -sSf | sh
@@ -34,6 +37,34 @@ git clone <this repo> && cd SemantEq
 lake exe cache get     # prebuilt Mathlib (~5 GB download)
 lake build semanteq # a few minutes
 ```
+
+**As a dependency of your own Lean project**, when the statements or proofs
+mention your project's definitions. Add to your `lakefile.toml`:
+
+```toml
+[[require]]
+name = "SemantEq"
+git = "<this repo>"
+rev = "v1.4.0"
+```
+
+then `lake build` in your project (and `lake exe cache get` if your project
+does not already have Mathlib built). Both programs then run from your
+project root, `lake exe semanteq ref.lean cand.lean` and `lake exe semanteq
+--proof file.lean`, and the files may import your own modules next to
+Mathlib:
+
+```lean
+import Mathlib
+import MyProject.Basic
+
+theorem r (n : ℕ) : MyProject.myPred n ↔ Even n := sorry
+```
+
+Your project must use the same Lean toolchain and Mathlib commit as this
+one (Lake builds SemantEq against your project's Mathlib). This route was
+checked with a small project that defines its own predicate and judges a
+pair of statements over it.
 
 The Lean toolchain and Mathlib versions are pinned (`lean-toolchain` pins
 Lean v4.30.0-rc1; `lake-manifest.json` pins the Mathlib commit, which is the
@@ -58,9 +89,15 @@ lake exe semanteq pairs.jsonl results.jsonl
 ```
 
 By default stdout shows a readable summary per pair, the verdict and, for
-each direction, the proof that closed it or `null`. The out-file is always
-the machine-readable JSONL. Add `--raw` to print the JSONL records on stdout
-instead (what the batch scripts consume):
+each direction, the proof that closed it, or one line on why it did not
+close (the last proof an audit refused, or how many attempts found no proof). The out-file is always
+the machine-readable JSONL. Each pair gets 20 seconds of wall-clock time by
+default; a pair that runs over reports `Timeout` instead of a judgement
+(`--timeout N` sets the limit in seconds, `--timeout 0` removes it; most pairs
+finish in a few seconds, the long tail is what the limit cuts). The limit is
+enforced during the search; compiling the two statements is not interrupted,
+so a pair can overrun by its compile time. Add `--raw` to
+print the JSONL records on stdout instead (what the batch scripts consume):
 
 ```bash
 lake exe semanteq --raw pairs.jsonl results.jsonl
@@ -81,6 +118,25 @@ Input, one pair per line:
                   "candidate": "import Mathlib\ntheorem c : ... := sorry"}
 ```
 
+**What a side must look like.** Each of `reference` and `candidate` (or each
+of the two `.lean` files) is the full text of one Lean file:
+
+1. an import header (`import Mathlib`, plus your own modules when installed
+   as a dependency);
+2. an optional preamble: `open`, `variable`, `set_option`, and any helper
+   `def`, `abbrev` or `notation` the statement needs. Helper definitions are
+   unfolded for the comparison, so two sides that package the same claim
+   behind different local definitions still match;
+3. **the statement, which is the last declaration in the file.** Its type is
+   what gets judged; its proof is ignored, so `:= sorry` is fine and usual.
+   Anything after it is not allowed, and a file whose last declaration is a
+   `def` reports `NotAProposition`.
+
+Names are free: the theorem can be called anything, and the two sides may
+use the same name, since each side is elaborated in its own namespace and the
+two preambles are merged into one environment. A side that does not compile
+reports a `*CompileError` with Lean's messages.
+
 Verdicts:
 
 | verdict | meaning |
@@ -89,10 +145,14 @@ Verdicts:
 | `EquivalentRestricted` | both implications proved **and audited** — the headline verdict |
 | `LikelyTooStrong` / `LikelyTooWeak` | only one direction holds |
 | `Inconclusive` | neither direction closed |
+| `Timeout` | the pair ran past the wall-clock limit before being accepted (`--timeout`) |
 | `*CompileError`, `NotAProposition` | the input itself is the problem |
+| `MalformedInput`, `*NoStatement`, `ContextMergeError`, `InternalError` | a line is not pair JSON; a side has no final declaration; the two sides' headers or preambles cannot be merged into one environment (details under `context`); an internal invariant failed (details under `errors`) |
 
 Search strength is adjustable via CLI flags (equivalently, `SEMANTEQ_*`
-environment variables; the pre-rename `STATIC_EVAL_*` names are still honoured):
+environment variables; a flag overrides the variable). An on/off switch
+(`SEMANTEQ_STRICT`, `SEMANTEQ_TRACE`, the `SEMANTEQ_NO_*` ablation switches) is
+on when set to anything but an empty string, `0` or `false`:
 
 | flag | default | what it alters |
 |---|---|---|
@@ -103,6 +163,7 @@ environment variables; the pre-rename `STATIC_EVAL_*` names are still honoured):
 | `--state-cap N` | 24 | frontier width of the multi-step search (states kept per level) |
 | `--deep-level-budget N` | 1000000 | work budget (heartbeats) each multi-step level may spend |
 | `--heartbeats N` | 100000 | heartbeat cap per proof attempt in the search/closer phase; raise for very large statements (research-grade formalizations), where honest unification can exceed the default |
+| `--timeout N` | 20 | wall-clock limit per pair in seconds; a pair over it reports `Timeout`; 0 disables. The paper's runs and the reproduction scripts use 0 |
 
 ```bash
 lake exe semanteq --depth 2 --arm-budget 160 --discovery-budget 128 \
@@ -112,18 +173,57 @@ lake exe semanteq --depth 2 --arm-budget 160 --discovery-budget 128 \
 Raising these buys additional recall on specific pair classes at increased
 runtime; the defaults favor precision and speed.
 
+Two further variables: `SEMANTEQ_MAX_ENVS` (default 4) caps the number of
+distinct import environments one process may build (each costs gigabytes),
+and `SEMANTEQ_TRACE=1` prints the search's progress on stderr. The ablation
+switches turn one audit off, for the paper's ablation only: for the
+evaluator `SEMANTEQ_NO_PREGATE`, `SEMANTEQ_NO_ESSENTIAL` (relevance),
+`SEMANTEQ_NO_P0` (explosion check), `SEMANTEQ_NO_PROOFAUDIT` (proof-term
+grading), `SEMANTEQ_NO_REPLAY` (antecedent-free replay); for the checker
+`SEMANTEQ_NO_REPLAY_LOCAL_FACTS`, `SEMANTEQ_NO_WITNESS_CHECK`,
+`SEMANTEQ_NO_CONJUNCT_ABLATION`, `SEMANTEQ_NO_CONJUNCT_SURFACE`, and
+`SEMANTEQ_AUDIT_TRACE=1` for its per-decision trace.
+
 **Audit an externally written implication proof** (the ProofChecker):
 
 ```bash
 lake exe semanteq [--strict] --proof <fixture.lean | directory> ...
 ```
 
-A fixture is a single file: the assumed statement(s) proved by `sorry`, then
-the goal statement with a real proof. The goal is the last theorem that is
-not `sorry`-proved; the antecedent is the last `sorry`-proved theorem declared
-before it, and any other `sorry`-proved theorem joins the assumed set. A
-directory argument audits every `.lean` file in it except `ref.lean` and
-`cand.lean` (not recursively). The checker prints the verdict, the reasons of
+A fixture is a single file, written like this:
+
+```lean
+import Mathlib
+
+-- the antecedent: the statement being assumed, closed with sorry
+theorem cand_assumed (n : ℕ) : 2 ∣ n ↔ Even n := by
+  sorry
+
+-- the goal: the statement to be derived, with the proof to be audited
+theorem ref (n : ℕ) : Even n ↔ 2 ∣ n := by
+  exact (cand_assumed n).symm
+```
+
+The rules that pick the two roles:
+
+- **The goal is the last `theorem` or `lemma` in the file that is not closed
+  with `sorry`.** Its proof is what gets audited.
+- **The antecedent is the last `sorry`-closed `theorem` or `lemma` declared
+  before the goal.** Any other `sorry`-closed theorem in the file joins the
+  assumed set (extra facts the proof may use without being asked where they
+  came from). Names are free; `_assumed` is only a convention.
+- The theorems must sit at the top level of the file, not inside a
+  `namespace` or `section` block, since the file is scanned for `theorem` and
+  `lemma` lines by name. An import header, `open` lines and helper
+  definitions before them are fine, and in-file helper lemmas with real
+  proofs are allowed and are audited at the place they are used.
+- One fixture checks one implication. A pair needs two fixtures, one with the
+  reference assumed and the candidate as the goal, one the other way round,
+  and the pair counts as certified only when both pass.
+
+A directory argument audits every `.lean` file in it except `ref.lean` and
+`cand.lean` (not recursively); `test/proofaudit/pairs/` and
+`test/campaign/proofs/` are full examples of this layout. The checker prints the verdict, the reasons of
 a `FAIL`, the tolerated uses counted by kind, every severe warning in full,
 and any axiom the proof depends on beyond `propext`, `Classical.choice` and
 `Quot.sound` (a local `axiom`, or the one `native_decide` introduces; the
@@ -233,7 +333,10 @@ test/reproduce.sh tables
 ```
 
 Each lane holds about 8 GB; every stage is chunked and resumable, and a
-pair that stalls a chunk is set aside and reported. The ProofNetVerif
+pair that stalls a chunk is set aside and reported. The scripts run the
+evaluator with its per-pair time limit off (`--timeout 0`), as the paper's
+runs did; with the default 20-second limit, ten of the 266 pairs the search
+accepts on the equivalent set would report `Timeout` instead. The ProofNetVerif
 statements themselves are not redistributed; `test/pnv_fetch.py` rebuilds
 the pair files from the public dataset under the ids used here. The BEq+
 rows come from our port of its released implementation, which is not part

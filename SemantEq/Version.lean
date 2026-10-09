@@ -3,19 +3,16 @@ import Lean
 /-!
 # Program version stamp
 
-`version` is the hand-maintained version tag — bump it whenever the search
-behavior changes (new closer, guard, lemma-set change). Together with the git
-commit captured at run time it stamps every out-file with a `_meta` first
-record, so scored results stay attributable to the exact program that produced
-them (`bench/HISTORY.jsonl` accumulates the scored history).
+`version` is bumped whenever the programs' behaviour changes (a new closer,
+guard or lemma set). Together with the git commit captured at run time it
+stamps every out-file with a `_meta` first record, so recorded results stay
+attributable to the exact program that produced them.
 -/
 
 namespace SemantEq
 
-/-- Version tag of the search pipeline. Bump on any behaviour change: it stamps
-every out-file's `_meta` record together with the git commit, so scored
-results stay attributable to the program that produced them. -/
-def version : String := "v1.3.2"
+/-- Version tag of the program; bump it on any behaviour change. -/
+def version : String := "v1.4.0"
 
 /-- Best-effort git identity of the working tree at run time: short commit hash
 and whether the tree is dirty. `unknown` outside a git checkout. -/
