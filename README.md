@@ -181,7 +181,18 @@ evaluator `SEMANTEQ_NO_PREGATE`, `SEMANTEQ_NO_ESSENTIAL` (relevance),
 `SEMANTEQ_NO_P0` (explosion check), `SEMANTEQ_NO_PROOFAUDIT` (proof-term
 grading), `SEMANTEQ_NO_REPLAY` (antecedent-free replay); for the checker
 `SEMANTEQ_NO_REPLAY_LOCAL_FACTS`, `SEMANTEQ_NO_WITNESS_CHECK`,
-`SEMANTEQ_NO_CONJUNCT_ABLATION`, `SEMANTEQ_NO_CONJUNCT_SURFACE`, and
+`SEMANTEQ_NO_CONJUNCT_ABLATION`, `SEMANTEQ_NO_CONJUNCT_SURFACE`,
+`SEMANTEQ_NO_SIMPLIFY` (judge the use of the antecedent on the proof as
+written), `SEMANTEQ_NO_HALVES` and `SEMANTEQ_NO_HALF_CONTENT` (the reading of
+the two halves of an equivalence), `SEMANTEQ_NO_FROZEN_SPINE` (the check on a
+proof converted along the antecedent), `SEMANTEQ_NO_NE_CLASS_RECORD`,
+`SEMANTEQ_NO_SKIP_STATEMENTS`, `SEMANTEQ_NO_TRANSPARENT_RECORD`,
+`SEMANTEQ_NO_LOCAL_FACT_READ`, `SEMANTEQ_NO_PREMISE_RULE` (the check on
+the premises of every lemma inside a justification),
+`SEMANTEQ_NO_HALF_EQUATION_FACT` (a library equation used as a fact counts
+as a library fact in the reading of halves), `SEMANTEQ_NO_LIBRARY_PRODUCTS`
+(a library fact taken apart is not a hypothesis), `SEMANTEQ_NO_NEG_POLARITY`
+(the argument of a negated hypothesis is judged one negation lower), and
 `SEMANTEQ_AUDIT_TRACE=1` for its per-decision trace.
 
 **Audit an externally written implication proof** (the ProofChecker):
@@ -209,14 +220,21 @@ The rules that pick the two roles:
 - **The goal is the last `theorem` or `lemma` in the file that is not closed
   with `sorry`.** Its proof is what gets audited.
 - **The antecedent is the last `sorry`-closed `theorem` or `lemma` declared
-  before the goal.** Any other `sorry`-closed theorem in the file joins the
-  assumed set (extra facts the proof may use without being asked where they
-  came from). Names are free; `_assumed` is only a convention.
-- The theorems must sit at the top level of the file, not inside a
-  `namespace` or `section` block, since the file is scanned for `theorem` and
-  `lemma` lines by name. An import header, `open` lines and helper
-  definitions before them are fine, and in-file helper lemmas with real
-  proofs are allowed and are audited at the place they are used.
+  before the goal.** Names are free; `_assumed` is only a convention.
+- **The file has two parts.** Everything up to and including the antecedent
+  is the formalization. A `sorry`-closed theorem declared there, other than
+  the antecedent, is an assumed statement: a lemma the formalization itself
+  leaves open, which the proof may use and which is judged by the shape of
+  its statement. Everything after the antecedent is the proof, and its last
+  theorem with a real proof is the goal. Keep `sorry` out of that part: a
+  `sorry` inside the goal's proof gives `SKIP_SORRY`, and a `sorry`-closed
+  theorem placed between the intended antecedent and the goal is read as
+  the antecedent.
+- The roles are read from the elaborated file, so a theorem may sit inside a
+  `namespace` or `section` and may carry attributes or `private`. An import
+  header, `open` lines and helper definitions are fine, and in-file helper
+  lemmas with real proofs are allowed and are audited at the place they are
+  used.
 - One fixture checks one implication. A pair needs two fixtures, one with the
   reference assumed and the candidate as the goal, one the other way round,
   and the pair counts as certified only when both pass.
@@ -224,19 +242,40 @@ The rules that pick the two roles:
 A directory argument audits every `.lean` file in it except `ref.lean` and
 `cand.lean` (not recursively); `test/proofaudit/pairs/` and
 `test/campaign/proofs/` are full examples of this layout. The checker prints the verdict, the reasons of
-a `FAIL`, the tolerated uses counted by kind, every severe warning in full,
-and any axiom the proof depends on beyond `propext`, `Classical.choice` and
-`Quot.sound` (a local `axiom`, or the one `native_decide` introduces; the
-`sorryAx` of the assumed statements is expected); `--raw` prints the full JSON
-record with every recorded flag instead. A *severe* warning marks a library
+a `FAIL`, the tolerated uses counted by kind and every severe warning in
+full; `--raw` prints the full JSON record with every recorded flag instead.
+A proof that depends on an axiom beyond `propext`, `Classical.choice` and
+`Quot.sound` (a local `axiom`, or the one `native_decide` introduces) fails,
+and the axiom is named; the `sorryAx` of the assumed statements is expected. A *severe* warning marks a library
 fact that was used to meet a hypothesis of the antecedent while drawing on
 nothing local (no hypothesis of the goal); such uses are tolerated, not
 failed. The proof of every local restatement admitted on the shape of its
 statement (`have h : A ↔ B := …`, or an in-file lemma) is read at the place
-it is used: each direction of it is checked as an implication proof of its
-own, so a direction that proves its conclusion without its hypothesis fails
-the proof, and a library fact inside it that meets a hypothesis of the
-antecedent is recorded like any other. `--strict` (or `SEMANTEQ_STRICT=1`) is
+it is used, and so is every equation or biconditional a proof converts
+along. Inside them, the two implications an equivalence is assembled from
+are read as implication proofs of their own: where they stand as arguments
+of a lemma that concludes `=` or `↔`, each an implication from one side of
+that conclusion to the other (`Iff.intro`, an antisymmetry lemma),
+and where a biconditional handed to such a lemma (`propext`) or converted
+along reduces to such a pair. A half that proves a part of the goal without
+its hypothesis, or that is proved from a library fact (a library equation
+used as a fact included) using neither its hypothesis nor any hypothesis in
+scope, fails the proof. So does a premise handed to any lemma inside such a
+justification when it proves, without the antecedent, a part the goal
+states outright. Whether a part of
+the proof uses the antecedent is judged after its logical detours are
+removed, so a wrapper that takes the antecedent and hands back its other
+input does not count as a use. The reduction has a work limit, and a proof
+that exhausts it fails with that reason. A local fact (`have h : P := …`)
+used on the way to the goal is read by its own proof when it is a
+hypothesis in scope in another form (a projection, an application, or the
+hypothesis rewritten with library equations), and a library fact inside
+that proof fails; any other local fact is refused where it is used. A
+library fact taken apart (`obtain ⟨t⟩ := …`, a `match`) stays the
+library's fact: its pieces are not hypotheses of the goal. A library
+fact whose conclusion is a disequality or a typeclass is accepted as a step
+and recorded; one that meets a hypothesis of the antecedent is recorded like
+any other, a fact taken out of a typeclass instance included. `--strict` (or `SEMANTEQ_STRICT=1`) is
 the strict reading of the definition as a mode: every severe use fails the
 proof, at the top level and inside such local proofs alike. The paper's
 strict table is the output of this mode.

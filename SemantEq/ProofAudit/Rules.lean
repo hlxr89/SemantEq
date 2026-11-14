@@ -170,6 +170,271 @@ def trivialType (ty : Expr) : MetaM Bool := do
   if a.approxDepth > 32 || b.approxDepth > 32 then return false
   isDefEqCheap a b
 
+/-- A constructor applied to all its arguments. -/
+def ctorApp? (env : Environment) (e : Expr) : Option (ConstructorVal × Array Expr) :=
+  match e.getAppFn with
+  | .const c _ =>
+    match env.find? c with
+    | some (.ctorInfo cv) =>
+      let args := e.getAppArgs
+      if args.size == cv.numParams + cv.numFields then some (cv, args) else none
+    | _ => none
+  | _ => none
+
+/-- Spend one simplification step; `false` once the fixture's budget is gone. -/
+def simpTick (ctx : Ctx) : MetaM Bool := do
+  let n ← ctx.simpFuel.get
+  if n == 0 then
+    ctx.simpExhausted.set true
+    return false
+  ctx.simpFuel.set (n - 1)
+  return true
+
+/-- May the simplifier open this constant? A theorem or definition whose type
+is a pure logical schema (`schematicType`: variables, sorts and the logical
+connectives only, which covers `and_iff_left`, `Iff.mp`, `id`,
+`Function.const`, `inferInstance` by one criterion), or an antecedent-free
+theorem of the file itself, or the auxiliary definition of a `match`. Never
+the antecedent, an assumed statement or an ex-falso eliminator. -/
+def simpOpenable (ctx : Ctx) (c : Name) : MetaM Bool := do
+  if c == ctx.ante || ctx.assumed.contains c || exFalso5.contains c || c == ``sorryAx then
+    return false
+  let some info := ctx.env.find? c | return false
+  let isThm := info matches .thmInfo _
+  unless isThm || (info matches .defnInfo _) do return false
+  if schematicType info.type then return true
+  -- the auxiliary definition behind a `match` is a case analysis in disguise
+  if Lean.Meta.isMatcherCore ctx.env c then return true
+  if isThm && isLocalConst ctx.env c then
+    return !(← constReaches ctx ctx.reachMemo ctx.ante c)
+  return false
+
+/-- Is the head of this term an eliminator or a projection that cannot
+reduce? Opening a constant into such a term gains nothing, so the constant
+is kept as written. -/
+def simpStuck (env : Environment) (r : Expr) : Bool :=
+  match r.getAppFn with
+  | .proj .. => true
+  | .const c _ =>
+    (match env.find? c with | some (.recInfo _) => true | _ => false)
+      || (env.getProjectionFnInfo? c).isSome
+  | _ => false
+
+/-- Does this term mention the antecedent: the antecedent itself, a constant
+of the file that reaches it, or a local that carries it? Memoised per term
+(a local's status is fixed for as long as terms that mention it are met). -/
+partial def mentionsAnte (ctx : Ctx) (e : Expr) : MetaM Bool := do
+  if let some r := (← ctx.involveMemo.get).get? e then return r
+  let r ← match e with
+    | .fvar id => pure ((← ctx.anteFVars.get).contains id)
+    | .const c _ =>
+      if c == ctx.ante then pure true
+      else if isLocalConst ctx.env c then constReaches ctx ctx.reachMemo ctx.ante c
+      else pure false
+    | .app f a => (do if ← mentionsAnte ctx f then pure true else mentionsAnte ctx a)
+    | .lam _ t b _ => (do if ← mentionsAnte ctx t then pure true else mentionsAnte ctx b)
+    | .forallE _ t b _ => (do if ← mentionsAnte ctx t then pure true else mentionsAnte ctx b)
+    | .letE _ t v b _ =>
+      (do if ← mentionsAnte ctx t then pure true
+          else if ← mentionsAnte ctx v then pure true else mentionsAnte ctx b)
+    | .mdata _ b => mentionsAnte ctx b
+    | .proj _ _ b => mentionsAnte ctx b
+    | _ => pure false
+  ctx.involveMemo.modify (·.insert e r)
+  return r
+
+mutual
+/-- Head normal form under the simplifier's rules, arguments untouched: a
+function applied to its argument is replaced by its body (a `have` or `let`
+included, and a name bound by one is replaced by its recorded value), a
+constant of pure logic is opened when that leads somewhere, the field of a
+structure that was just built is read off, an eliminator of a logical
+connective applied to a constructor picks its branch, and a transport along
+`propext i` (by `Eq.mp`, `Eq.mpr`, `cast` or the eliminator of equality) is
+the half `i.mp` or `i.mpr`. What a rule needs in head form (the structure a
+field is read from, the major premise of an eliminator) is reduced on
+demand. Cached per term; every step is counted against the fixture's budget
+(`simpTick`). -/
+partial def simpWhnf (ctx : Ctx) (e : Expr) : MetaM Expr := do
+  if let some r := (← ctx.whnfCache.get).get? e then return r
+  let r ← simpWhnfCore ctx e
+  ctx.whnfCache.modify (·.insert e r)
+  return r
+
+partial def simpWhnfCore (ctx : Ctx) (e : Expr) : MetaM Expr := do
+  match e with
+  | .mdata _ b => simpWhnf ctx b
+  | .letE _ _ v b _ =>
+    if ← simpTick ctx then simpWhnf ctx (b.instantiate1 v) else return e
+  | .fvar id =>
+    -- a name bound by `have` or `let` stands for its value
+    let pv := (← ctx.propValues.get).get? id
+    let dv := (← ctx.localValues.get).get? id
+    match pv.orElse (fun _ => dv) with
+    | some v => if ← simpTick ctx then simpWhnf ctx v else return e
+    | none => return e
+  | .proj _ i b =>
+    let b' ← simpWhnf ctx b
+    if let some (cv, args) := ctorApp? ctx.env b' then
+      if cv.numParams + i < args.size then
+        if ← simpTick ctx then return ← simpWhnf ctx args[cv.numParams + i]!
+    return e
+  | .app .. =>
+    let f := e.getAppFn
+    let args := e.getAppArgs
+    match f with
+    | .lam .. =>
+      if ← simpTick ctx then simpWhnf ctx e.headBeta else return e
+    | .mdata _ f' => simpWhnf ctx (mkAppN f' args)
+    | .letE .. | .fvar _ | .proj .. =>
+      let f' ← simpWhnf ctx f
+      if f' == f then return e else simpWhnf ctx (mkAppN f' args)
+    | .const c us =>
+      -- transport along `propext i` is the half `i.mp` / `i.mpr`, whether
+      -- it is written with `Eq.mp`, `Eq.mpr`, `cast` or the eliminator of
+      -- equality at the identity motive
+      if (c == ``Eq.mp || c == ``Eq.mpr || c == ``cast) && args.size ≥ 4 then
+        let h ← simpPropext ctx args[2]!
+        if h.isAppOfArity ``propext 3 then
+          if ← simpTick ctx then
+            let pa := h.getAppArgs
+            let head := mkConst (if c == ``Eq.mpr then ``Iff.mpr else ``Iff.mp)
+            return ← simpWhnf ctx (mkAppN head (#[pa[0]!, pa[1]!, pa[2]!] ++ args.extract 3 args.size))
+        -- any other `Eq.mp` / `Eq.mpr` is a conversion and stays as written
+        if c != ``cast then return e
+      if (c == ``Eq.rec || c == ``Eq.ndrec) && args.size ≥ 6 then
+        let idMotive := match args[2]!.consumeMData with
+          | .lam _ _ (.lam _ _ (.bvar 1) _) _ => c == ``Eq.rec
+          | .lam _ _ (.bvar 0) _ => c == ``Eq.ndrec
+          | _ => false
+        if idMotive then
+          let h ← simpPropext ctx args[5]!
+          if h.isAppOfArity ``propext 3 then
+            if ← simpTick ctx then
+              let pa := h.getAppArgs
+              return ← simpWhnf ctx (mkAppN (mkConst ``Iff.mp)
+                (#[pa[0]!, pa[1]!, pa[2]!, args[3]!] ++ args.extract 6 args.size))
+        -- otherwise the ordinary rules below apply (the eliminator on `rfl`)
+      -- the field of a structure that was just built
+      if let some pi := ctx.env.getProjectionFnInfo? c then
+        if pi.numParams < args.size then
+          let st ← simpWhnf ctx args[pi.numParams]!
+          if let some (cv, sargs) := ctorApp? ctx.env st then
+            if cv.name == pi.ctorName && cv.numParams + pi.i < sargs.size then
+              if ← simpTick ctx then
+                return ← simpWhnf ctx
+                  (mkAppN sargs[cv.numParams + pi.i]! (args.extract (pi.numParams + 1) args.size))
+        return e
+      -- an eliminator of a logical connective applied to a constructor
+      if let some (.recInfo rv) := ctx.env.find? c then
+        if coreLogicName c.getPrefix then
+          let mi := rv.getMajorIdx
+          if mi < args.size then
+            let mj ← simpWhnf ctx args[mi]!
+            if let some (cv, margs) := ctorApp? ctx.env mj then
+              if let some rule := rv.rules.find? (·.ctor == cv.name) then
+                if ← simpTick ctx then
+                  let rhs := rule.rhs.instantiateLevelParams rv.levelParams us
+                  let r := mkAppN rhs (args.extract 0 (rv.numParams + rv.numMotives + rv.numMinors))
+                  let r := mkAppN r (margs.extract cv.numParams margs.size)
+                  let r := mkAppN r (args.extract (mi + 1) args.size)
+                  return ← simpWhnf ctx r.headBeta
+        return e
+      -- a constant of pure logic, or an antecedent-free lemma of the file, is
+      -- opened when that leads somewhere
+      if ← simpOpenable ctx c then
+        if let some info := ctx.env.find? c then
+          if let some v := valueOf? ctx.env c (allowOpaque := true) then
+            if info.levelParams.length == us.length then
+              if ← simpTick ctx then
+                let r ← simpWhnf ctx ((v.instantiateLevelParams info.levelParams us).beta args)
+                if simpStuck ctx.env r then return e else return r
+      return e
+    | _ => return e
+  | _ => return e
+
+/-- Bring an equation between propositions to the form `propext i` when it
+is one in disguise: the symmetric of one, two of them chained, one carried
+through the identity function (`congrArg id`, `congr rfl`). Anything else is
+returned in head normal form. -/
+partial def simpPropext (ctx : Ctx) (e : Expr) : MetaM Expr := do
+  let h ← simpWhnf ctx e
+  if h.isAppOfArity ``propext 3 then return h
+  if h.isAppOfArity ``Eq.symm 4 then
+    let h1 ← simpPropext ctx (h.getArg! 3)
+    if h1.isAppOfArity ``propext 3 then
+      let pa := h1.getAppArgs
+      return mkAppN (mkConst ``propext)
+        #[pa[1]!, pa[0]!, mkAppN (mkConst ``Iff.symm) #[pa[0]!, pa[1]!, pa[2]!]]
+    return h
+  if h.isAppOfArity ``Eq.trans 6 then
+    let h1 ← simpPropext ctx (h.getArg! 4)
+    let h2 ← simpPropext ctx (h.getArg! 5)
+    if h1.isAppOfArity ``propext 3 && h2.isAppOfArity ``propext 3 then
+      let p1 := h1.getAppArgs
+      let p2 := h2.getAppArgs
+      return mkAppN (mkConst ``propext)
+        #[p1[0]!, p2[1]!, mkAppN (mkConst ``Iff.trans) #[p1[0]!, p1[1]!, p2[1]!, p1[2]!, p2[2]!]]
+    return h
+  let isId (f : Expr) : Bool := match f with
+    | .lam _ _ (.bvar 0) _ => true
+    | _ => f.isConstOf ``id || f.isAppOfArity ``id 1
+  if h.isAppOfArity ``congrArg 6 then
+    -- `congrArg f h'` with `f` the identity
+    if isId (← simpWhnf ctx (h.getArg! 4)) then return ← simpPropext ctx (h.getArg! 5)
+    return h
+  if h.isAppOfArity ``congr 8 then
+    -- `congr rfl h'` at the identity
+    let hf ← simpWhnf ctx (h.getArg! 6)
+    if isId (← simpWhnf ctx (h.getArg! 2)) && (hf.isAppOf ``Eq.refl || hf.isAppOf ``rfl) then
+      return ← simpPropext ctx (h.getArg! 7)
+    return h
+  return h
+
+/-- Remove the logical detours of a term, so that the question "does this
+part use the antecedent" is asked of what the proof does and not of how it
+is written: the term is brought to head normal form (`simpWhnf`) and its
+parts are treated the same way. `(and_iff_left h).mp ⟨p, h⟩` becomes `p`.
+With `gate`, only the parts that mention the antecedent are touched: a part
+that cannot carry it is left as written. -/
+partial def simpGo (ctx : Ctx) (gate : Bool) (e : Expr) : MetaM Expr := do
+  if gate then
+    if !(← mentionsAnte ctx e) then return e
+  if let some (r, ungated) := (← ctx.simpCache.get).get? e then
+    if ungated || gate then return r
+  let h ← simpWhnf ctx e
+  let r ← match h with
+    | .app .. =>
+      let f := h.getAppFn
+      let args := h.getAppArgs
+      let args' ← args.mapM (simpGo ctx gate)
+      let f' ← match f with
+        | .lam .. | .proj .. => simpGo ctx gate f
+        | _ => pure f
+      if f' == f && (args'.zip args).all (fun (x, y) => x == y) then pure h
+      else pure (mkAppN f' args')
+    | .lam n t b bi =>
+      let b' ← simpGo ctx gate b
+      pure (if b' == b then h else .lam n t b' bi)
+    | .forallE n t b bi =>
+      let t' ← simpGo ctx gate t
+      let b' ← simpGo ctx gate b
+      pure (if t' == t && b' == b then h else .forallE n t' b' bi)
+    | .proj s i b =>
+      let b' ← simpGo ctx gate b
+      pure (if b' == b then h else .proj s i b')
+    | _ => pure h
+  ctx.simpCache.modify (·.insert e (r, !gate))
+  return r
+end
+
+/-- The term with its logical detours removed (`simpGo`), or the term itself
+when the simplification is switched off. `gate := false` simplifies a term
+that need not mention the antecedent (a statement, a premise). -/
+def simplifyLogic (ctx : Ctx) (e : Expr) (gate : Bool := true) : MetaM Expr := do
+  if (← getConfig).noSimplify then return e
+  tryCatchRuntimeEx (simpGo ctx gate e) (fun _ => do ctx.simpExhausted.set true; pure e)
+
 /-- Load-bearing involvement. A mention of the antecedent that cannot carry
 its content into the part's conclusion (the discarded argument of
 `Function.const` or `id`, a beta-redex's or `have`'s unused binder, an unused
@@ -227,7 +492,7 @@ where
 def anteInvolvedLB (ctx : Ctx) (e : Expr) : MetaM Bool := do
   if !(← anteInvolved ctx e) then return false
   let memo ← IO.mkRef ({} : Std.HashMap Expr Bool)
-  lbInvolvedGo ctx memo e
+  lbInvolvedGo ctx memo (← simplifyLogic ctx e)
 
 /-- Extensionality introductions whose lambda binders inherit pair-aligned
 surface status (budgeted), symmetric to the destructuring-products rule:
@@ -364,6 +629,15 @@ def isGoalSpineProp (ctx : Ctx) (p : Expr) : MetaM Bool := do
   -- types) are premises, not parts to be proved
   spinePropOf (← ctx.goalTypeRem.get) p
 
+/-- Is `p` a part the goal states outright: on the spine of the remaining
+conclusion and not under one of its binders? -/
+def isGoalSpinePropExact (ctx : Ctx) (p : Expr) : MetaM Bool := do
+  for q in spineParts (← ctx.goalTypeRem.get) do
+    unless q.hasLooseBVars do
+      if q == p then return true
+      if ← isDefEqCheap q p then return true
+  return false
+
 /-- Nesting depth of a leading `∃ x y …` (0 for a non-existential). -/
 partial def existsDepth : Expr → Nat
   | .mdata _ b => existsDepth b
@@ -476,9 +750,10 @@ def witnessAudit (ctx : Ctx) (anteType : Expr) (args : Array Expr) : MetaM Unit 
 /-- The severe tier of the antecedent-argument warning. Traverse `e`, looking
 through have- and let-bound locals, and report whether it draws on a local
 proposition and whether it mentions a local variable at all. A local
-proposition is a valueless Prop-typed fvar (a hypothesis), an
-antecedent-involved fvar, the antecedent itself, or an environment-local
-constant that reaches the antecedent. -/
+proposition is a valueless Prop-typed fvar (a hypothesis) that was not
+obtained by taking apart a library fact, an antecedent-involved fvar, the
+antecedent itself, or an environment-local constant that reaches the
+antecedent. -/
 partial def localityGo (ctx : Ctx) (seen : IO.Ref FVarIdSet)
     (prop data : IO.Ref Bool) : Expr → MetaM Unit
   | .fvar id => do
@@ -487,6 +762,9 @@ partial def localityGo (ctx : Ctx) (seen : IO.Ref FVarIdSet)
     if (← ctx.anteFVars.get).contains id then prop.set true
     if let some v := (← ctx.propValues.get).get? id then localityGo ctx seen prop data v
     else if let some v := (← ctx.localValues.get).get? id then localityGo ctx seen prop data v
+    else if (← ctx.libraryFVars.get).contains id then
+      -- a variable obtained by taking apart a library fact is the library's
+      data.set true
     else
       data.set true
       if let some ty ← inferTypeSafe (mkFVar id) then
@@ -512,11 +790,12 @@ def localityOf (ctx : Ctx) (e : Expr) : MetaM (Bool × Bool) := do
   localityGo ctx seen prop data e
   return (← prop.get, ← data.get)
 
-/-- Inside a rewrite record or a local bridge's proof, positional goal-part
-ablations are suspended (the sub-proof proves the record or the bridge, not
-the goal); only the collapse rules convict there. -/
+/-- Inside a rewrite record, a local bridge's proof or the proof of a local
+fact read at its place of use, positional goal-part ablations are suspended
+(the sub-proof proves the record, the bridge or the fact, not the goal);
+the collapse rules still convict there. -/
 def ablationSuspended (ctx : Ctx) : MetaM Bool := do
-  return (← ctx.recordCtx.get) > 0 || (← ctx.localProofCtx.get) > 0
+  return (← ctx.recordCtx.get) > 0 || (← ctx.localProofCtx.get) > 0 || (← ctx.localFactCtx.get) > 0
 
 /-- Inside a record or a local bridge's proof, an antecedent-free proof of
 `p = True` or `p ↔ True` for a goal spine part `p` is a goal part closed

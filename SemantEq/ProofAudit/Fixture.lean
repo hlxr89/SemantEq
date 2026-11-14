@@ -69,11 +69,13 @@ def FixtureResult.render (r : FixtureResult) : String := Id.run do
                               && (x.splitOn "feeding ante application").length > 1
     let isRec (x : String) := (x.splitOn "inside a rewrite record").length > 1
     let isShape (x : String) := x.startsWith "goal-shaped local bridge"
+    let isFactStep (x : String) := (x.splitOn "used as a step").length > 1
     let nLib := (plain.filter isLib).size
     let nLoc := (plain.filter isLoc).size
     let nRec := (plain.filter isRec).size
     let nShape := (plain.filter isShape).size
-    let nOther := plain.size - nLib - nLoc - nRec - nShape
+    let nFactStep := (plain.filter isFactStep).size
+    let nOther := plain.size - nLib - nLoc - nRec - nShape - nFactStep
     if plain.isEmpty then out := out ++ "   warnings: none\n"
     else
       let mut parts : Array String := #[]
@@ -81,6 +83,7 @@ def FixtureResult.render (r : FixtureResult) : String := Id.run do
       if nLoc > 0 then parts := parts.push s!"{nLoc} local hypothes{if nLoc == 1 then "is" else "es"} meeting a hypothesis of the antecedent"
       if nRec > 0 then parts := parts.push s!"{nRec} library fact{if nRec == 1 then "" else "s"} inside a rewrite record or a local restatement's proof"
       if nShape > 0 then parts := parts.push s!"{nShape} goal-shaped local restatement{if nShape == 1 then "" else "s"}"
+      if nFactStep > 0 then parts := parts.push s!"{nFactStep} library fact{if nFactStep == 1 then "" else "s"} with a ≠ or class conclusion used as a step"
       if nOther > 0 then parts := parts.push s!"{nOther} other"
       out := out ++ s!"   warnings: {plain.size} tolerated ({", ".intercalate parts.toList})\n"
     if severe.isEmpty then out := out ++ "   severe warnings: none\n"
@@ -103,19 +106,43 @@ def FixtureResult.render (r : FixtureResult) : String := Id.run do
         out := out ++ s!"      {x.drop 6}{note}\n"
   return out
 
-/-- Theorem names in source order (top-level `theorem`/`lemma` declarations). -/
-def declaredThmNames (src : String) : Array Name := Id.run do
-  let mut out := #[]
-  for line in src.splitOn "\n" do
-    let l := line.trimAsciiStart.copy
-    for kw in ["theorem ", "lemma "] do
-      if l.startsWith kw then
-        let rest := (l.drop kw.length).trimAsciiStart.copy
-        let ident := String.ofList <| rest.toList.takeWhile fun ch =>
-          ch.isAlphanum || ch == '_' || ch == '\'' || ch == '.' || ch == '!' || ch == '?'
-        if !ident.isEmpty then
-          out := out.push ident.toName
-  return out
+/-- The file's own theorems in source order: every constant of the elaborated
+file that a `theorem` or `lemma` command declared, whatever namespace,
+attribute or visibility it carries, ordered by the position of its name. The
+environment supplies the names and their positions; the source text is only
+consulted for the keyword in front of each name and for the name itself, so
+the auxiliary theorems Lean generates (equation lemmas, `injEq`,
+`sizeOf_spec`) are never roles. -/
+def declaredThms (env : Environment) (src : String) : Array Name := Id.run do
+  let lines := (src.splitOn "\n").toArray
+  let keywordBefore (line col : Nat) : Bool := Id.run do
+    -- the text in front of the name on its own line, or, when the name opens
+    -- a line, the end of the nearest non-blank line above it
+    let mut l := line
+    let mut pre := String.ofList ((lines[l - 1]?.getD "").toList.take col)
+    while pre.trimAscii.isEmpty && l > 1 do
+      l := l - 1
+      pre := lines[l - 1]?.getD ""
+    let t := pre.trimAsciiEnd.copy
+    return t.endsWith "theorem" || t.endsWith "lemma"
+  -- the identifier written at a position, and whether it is the name `n` as
+  -- the file spells it (the last components of the full name)
+  let spelledAt (line col endLine endCol : Nat) (n : Name) : Bool :=
+    let rest := (lines[line - 1]?.getD "").toList.drop col
+    let tok := String.ofList (if endLine == line then rest.take (endCol - col) else rest)
+    let fits (full : String) : Bool := full == tok || full.endsWith ("." ++ tok)
+    !tok.isEmpty && (fits (toString n) || fits (n.toString (escape := false)))
+  let mut found : Array (Nat × Nat × Name) := #[]
+  for (n, info) in env.constants.map₂.toList do
+    unless info matches .thmInfo _ do continue
+    let some r := declRangeExt.find? env n | continue
+    let pos := r.selectionRange.pos
+    let epos := r.selectionRange.endPos
+    if keywordBefore pos.line pos.column
+        && spelledAt pos.line pos.column epos.line epos.column n then
+      found := found.push (pos.line, pos.column, n)
+  let sorted := found.qsort fun a b => a.1 < b.1 || (a.1 == b.1 && a.2.1 < b.2.1)
+  return sorted.map (·.2.2)
 
 /-- Audit one fixture file. Fixture convention: the goal is the last theorem
 with a real proof, the antecedent the last sorried theorem declared before
@@ -131,7 +158,7 @@ def auditFixture (path : String) (strict : Bool := false) : IO FixtureResult := 
   unless compiled.report.ok do
     return { file := path, verdict := "ERROR", reasons := compiled.report.errors }
   let env := cmdState.env
-  let names := (declaredThmNames src).filter fun n => (env.find? n).isSome
+  let names := declaredThms env src
   if names.size < 2 then
     return { file := path, verdict := "ERROR",
              reasons := #[s!"expected ≥2 theorems, found {names.size}"] }
@@ -175,12 +202,14 @@ def auditFixture (path : String) (strict : Bool := false) : IO FixtureResult := 
     goalStmt := goalType
     catMemo := ← IO.mkRef {}, reachMemo := ← IO.mkRef {}, sorryMemo := ← IO.mkRef {}
     localGrade := ← IO.mkRef {}, goalParts := ← IO.mkRef #[]
-    occRoles := ← IO.mkRef {}, recordOccRoles := ← IO.mkRef {}, anteFVars := ← IO.mkRef {}
+    occRoles := ← IO.mkRef {}, recordOccRoles := ← IO.mkRef {}, anteFVars := ← IO.mkRef {}, libraryFVars := ← IO.mkRef {}, recordHyps := ← IO.mkRef {}
     surfaceFVars := ← IO.mkRef {}, surfaceLeft := ← IO.mkRef 0
     anteSlotData := ← IO.mkRef #[], localValues := ← IO.mkRef {}
     propValues := ← IO.mkRef {}
+    simpCache := ← IO.mkRef {}, whnfCache := ← IO.mkRef {}, involveMemo := ← IO.mkRef {}
+    simpFuel := ← IO.mkRef 400000, simpExhausted := ← IO.mkRef false
     chainCtx := ← IO.mkRef 0, frozenCtx := ← IO.mkRef 0
-    recordCtx := ← IO.mkRef 0, localProofCtx := ← IO.mkRef 0, dirCtx := ← IO.mkRef 0, helperWalks := ← IO.mkRef {}
+    recordCtx := ← IO.mkRef 0, localProofCtx := ← IO.mkRef 0, localFactCtx := ← IO.mkRef 0, dirCtx := ← IO.mkRef 0, helperWalks := ← IO.mkRef {}
     goalOpenParts := ← IO.mkRef #[], goalTypeRem := ← IO.mkRef (mkConst ``True)
     fails := ← IO.mkRef #[], flags := ← IO.mkRef #[]
     sorryHit := ← IO.mkRef false, expanded := ← IO.mkRef {} }
@@ -201,20 +230,24 @@ def auditFixture (path : String) (strict : Bool := false) : IO FixtureResult := 
           ctx.fail "proof never touches the antecedent"
         walkLamSurface ctx .goal 0 goalVal
         -- axiom accounting: the three standard axioms and `sorryAx` (the
-        -- assumed statements are sorried by protocol) are expected; anything
-        -- else (a local `axiom`, `Lean.ofReduceBool` from `native_decide`) is
-        -- reported by name
+        -- assumed statements are sorried by protocol) are expected; a proof
+        -- that depends on anything else (a local `axiom`, the compiler-trust
+        -- axiom of `native_decide`) is not a valid proof for this audit: it
+        -- is named and the proof fails
         for a in (← Lean.collectAxioms goal) do
           if a == ``propext || a == ``Classical.choice || a == ``Quot.sound || a == ``sorryAx then
             continue
           let here := if isLocalConst ctx.env a then " (declared in this file)" else ""
           ctx.flag s!"axiom {a} used by the proof{here}"
+          ctx.fail s!"the proof depends on the axiom {a}{here}; only propext, Classical.choice and Quot.sound are accepted"
   catch e =>
     return { file := path, verdict := "ERROR",
              reasons := #[s!"audit crashed: {toString e}"], ante, goal,
              assumed := assumedArr }
   if ← ctx.sorryHit.get then
     return { file := path, verdict := "SKIP_SORRY", ante, goal, assumed := assumedArr }
+  if ← ctx.simpExhausted.get then
+    ctx.fails.modify (·.push "the proof is too large for the relevance check (simplification budget exhausted)")
   let mut fails ← ctx.fails.get
   let mut flags ← ctx.flags.get
   if fails.isEmpty then

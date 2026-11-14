@@ -79,6 +79,16 @@ structure Ctx where
   a collapse convicts), not on the goal spine -/
   recordOccRoles : IO.Ref (FVarIdMap Role)
   anteFVars  : IO.Ref FVarIdSet
+  /-- variables obtained by taking apart a library fact (the products of a
+  one-branch elimination whose major premise uses neither the antecedent nor
+  a proposition in scope): proved facts of the library under a local name,
+  not hypotheses of the goal -/
+  libraryFVars : IO.Ref FVarIdSet
+  /-- hypotheses opened by the walk inside a justification (the hypothesis of
+  an implication proved inside a rewrite record or a local bridge's proof):
+  for what is proved under it, such a hypothesis plays the antecedent's
+  role -/
+  recordHyps : IO.Ref FVarIdSet
   /-- fvars established as the pair-aligned statement surface: goal-telescope
   binders up to the aligned depth, surface-valued data bindings, and the
   destructuring products of surface-rooted eliminations (the data-surface
@@ -114,6 +124,12 @@ structure Ctx where
   bridge's use role. Goal-part ablations are suspended there (the sub-proof
   proves the bridge, not the goal) and content is graded at the flag tier. -/
   localProofCtx : IO.Ref Nat
+  /-- depth inside the proof of an antecedent-free `have` that is not an
+  equation and is a hypothesis in scope in another form, read at goal role
+  because the fact is used on the goal derivation. Goal-part ablations are
+  suspended there (the sub-proof proves the fact, not the goal) and a
+  library fact on its derivation fails, as on the goal's. -/
+  localFactCtx : IO.Ref Nat
   /-- depth inside a direction of a local bridge's proof (a Prop-binder lambda
   met under `localProofCtx`): the direction is read as an implication proof of
   its own, its hypothesis in the antecedent's role (`directionAblation`) -/
@@ -129,6 +145,17 @@ structure Ctx where
   an outside fact can be tested for whether it draws on any local hypothesis
   through such a binding -/
   propValues : IO.Ref (FVarIdMap Expr)
+  /-- results of the detour-removing simplifier (`simplifyLogic`), per term -/
+  simpCache : IO.Ref (Std.HashMap Expr (Expr × Bool))
+  /-- head normal forms computed by the simplifier, per term -/
+  whnfCache : IO.Ref (Std.HashMap Expr Expr)
+  /-- whether a term mentions the antecedent (`mentionsAnte`), per term -/
+  involveMemo : IO.Ref (Std.HashMap Expr Bool)
+  /-- remaining simplification steps for this fixture; when the budget runs
+  out the relevance of the proof's parts cannot be decided and the proof
+  fails -/
+  simpFuel : IO.Ref Nat
+  simpExhausted : IO.Ref Bool
   fails      : IO.Ref (Array String)
   flags      : IO.Ref (Array String)
   sorryHit   : IO.Ref Bool
@@ -247,6 +274,38 @@ def categorize (ctx : Ctx) (c : Name) : MetaM Cat := do
   ctx.catMemo.modify (·.insert c cat)
   return cat
 
+/-- Is this library constant, graded as a bridge by the shape of its
+conclusion, a fact rather than an identification? Its conclusion is a
+disequality or a typeclass, not `=`, `↔` or `HEq`. Registered instances are
+not counted: an instance that fills a typeclass argument is vocabulary. -/
+def factShapedBridge (ctx : Ctx) (c : Name) : MetaM Bool := do
+  let some info := ctx.env.find? c | return false
+  -- a fact is a theorem: a constructor (`Nonempty.intro`, `Fact.mk`) only
+  -- packages what its arguments supply
+  unless info matches .thmInfo _ do return false
+  unless ← isPropSafe info.type do return false
+  if ← Meta.isInstance c then return false
+  let plain ← try
+      forallTelescope info.type fun _ concl =>
+        pure (match concl.getAppFn with
+          | .const h _ => some h
+          | _ => none)
+    catch _ => pure none
+  match plain with
+  | some h =>
+    if h == ``Ne then return true
+    if h == ``Eq || h == ``Iff || h == ``HEq then return false
+    if isClass ctx.env h then return true
+    try
+      forallTelescopeReducing info.type fun _ concl => do
+        match concl.getAppFn with
+        | .const h' _ =>
+          if h' == ``Eq || h' == ``Iff || h' == ``HEq then return false
+          return isClass ctx.env h' || (← Meta.isClass? concl).isSome
+        | _ => return false
+    catch _ => return false
+  | none => return false
+
 /-- Record an occurrence of a local at a role; inside a record or a local
 bridge's proof it goes to `recordOccRoles`. -/
 def recordOcc (ctx : Ctx) (id : FVarId) (role : Role) : MetaM Unit := do
@@ -290,13 +349,28 @@ def judgeConst (ctx : Ctx) (role : Role) (neg : Nat) (c : Name) (locus : String)
   | .content =>
     match role with
     | .goal =>
-      if (← ctx.recordCtx.get) > 0 || (← ctx.localProofCtx.get) > 0 then
+      if (← ctx.localFactCtx.get) > 0 then
+        -- the proof of a local fact read at its place of use: a library
+        -- fact fails there, inside a record too
+        ctx.fail s!"content import {c} in the proof of a local fact used on the goal derivation ({locus})"
+      else if (← ctx.recordCtx.get) > 0 || (← ctx.localProofCtx.get) > 0 then
         -- a side condition of a conditional bridge inside a record, or a
         -- premise inside a local bridge's proof: tolerated and recorded
         ctx.flag s!"content import {c} inside a rewrite record or a local bridge's proof ({locus})"
       else ctx.fail s!"content import {c} on goal spine ({locus})"
     | .anteArg => ctx.flag s!"content import {c} feeding ante application ({locus})"
     | .side => pure ()
+  | .bridge =>
+    -- a library fact whose conclusion is a disequality or a typeclass is
+    -- accepted like a bridge, and its use is recorded: as a step on the goal
+    -- derivation, or as a fact that meets a hypothesis of the antecedent
+    -- (then the severe tier applies as for any library fact)
+    unless (← getConfig).noNeClassRecord do
+      if ← factShapedBridge ctx c then
+        match role with
+        | .goal => ctx.flag s!"library fact {c} with a ≠ or class conclusion used as a step ({locus})"
+        | .anteArg => ctx.flag s!"content import {c} feeding ante application ({locus})"
+        | .side => pure ()
   | _ => pure ()
 
 /-- Do the Iff/Eq sides of this statement unify with a goal part? Over-eager

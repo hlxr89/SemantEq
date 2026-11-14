@@ -117,15 +117,40 @@ context and constant grading (`Ctx`), the node-level rules (`Rules`), the
 proof-term walk (`Walk`), the confiscated-instances reproof (`Reproof`) and the
 fixture protocol (`Fixture`). A
 fixture provides the assumed statement(s) as `sorry`-proved theorems and the
-goal with a real proof; the checker walks the proof with role- and
+goal with a real proof (the roles are read from the elaborated file: the
+formalization runs up to the antecedent, the proof comes after it); the checker walks the proof with role- and
 polarity-aware constant grading, ablates local subproofs to confirm the
-antecedent carries the spine (the dependency test ignores dead mentions of
-the antecedent — a discarded argument, a proof of `True`, an unused binder),
+antecedent carries the spine (the dependency test is asked of the proof with
+its logical detours removed: a function applied to its argument, a `have`, a
+lemma of pure logic, the field of a structure that was just built are
+reduced first, so a wrapper that takes the antecedent and hands back its
+other input is not a use of it; a discarded argument, a proof of `True`, an
+unused binder are dead mentions as well),
 reads in-file helper lemmas inline at the place they are called, and walks
 the equation or biconditional a rewrite is justified by at the role of the
 rewrite: a fact used there to meet a side condition is recorded, while a
 part of the goal's conclusion equated to `True` there without the antecedent
-fails the proof. Eliminating an empty type or discriminating an absurd
+fails the proof. An equation or a biconditional that the proof assembles
+from two implications is read half by half, wherever it stands (a
+biconditional used as a justification is brought to head form first, so a
+pair of implications packed some other way is read too): each half is an
+implication proof of its own, with
+its hypothesis in the antecedent's role, and a half proved from a library
+fact with neither its hypothesis nor a hypothesis in scope behind it, or
+closing a part of the goal without its hypothesis, fails the proof. A
+premise handed to any lemma inside a justification fails likewise when it
+proves, without the antecedent, a part the goal states outright. The proof that a conversion along the antecedent carries is checked
+too: a part the goal states, closed there by a library fact or a
+computation, fails, unless that proof is a hypothesis of the goal or a
+projection, an application or a rewriting with library equations of one;
+a conversion nested in the converted proof is judged the same way, and the
+pieces of a library fact taken apart are not hypotheses. A local
+fact on the goal's derivation is read by its own proof when it is a
+hypothesis in scope in another form (a projection, an application, or the
+hypothesis rewritten with library equations); a library fact inside that
+proof fails. A statement, or a family of statements, is not a
+derivation, so nothing inside a type is graded; a structure assembled on the
+spot and handed to the antecedent is read through its fields. Eliminating an empty type or discriminating an absurd
 equation counts as ex falso like `False.elim`. It finishes with an
 adversarial reproof: the
 proof's own ante-free constructions and ante-free local facts, wherever they
@@ -136,9 +161,10 @@ a witness supplied for an existential hypothesis of the antecedent must be
 built from the goal's own variables or be a closed term the goal statement
 mentions; a witness conjured from nowhere (`n := 0` when the goal's own
 hypothesis already provides the object) fails the proof. Verdicts are
-`PASS`/`FAIL` with the failing reason, the tolerated uses by kind, the severe
-warnings, and any axiom beyond the three standard ones that the proof depends
-on. One tolerance is deliberate: a library
+`PASS`/`FAIL` with the failing reason, the tolerated uses by kind and the
+severe warnings. A proof that depends on an axiom beyond the three standard
+ones fails. A library fact whose conclusion is a disequality or a typeclass
+is accepted as a step and recorded. One tolerance is deliberate: a library
 fact that meets a hypothesis of the antecedent is recorded as a warning
 rather than failed (marked *severe* when it draws on nothing local), because
 Mathlib states many identifications in one direction only. The proof of every
