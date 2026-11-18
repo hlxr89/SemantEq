@@ -4,10 +4,11 @@
 #   ./test/campaign/run_campaign.sh [unrestricted|faithful|rewrite|expedient|all]
 #   LIMIT=N   only the first N pairs (smoke test)
 #   STRICT=1  run the checker in --strict mode (the paper's strict reading); records go to results/<style>.strict.jsonl
+#   SET=name  another proof set with the same layout: campaign_neg832 or semanteq_verif (default: campaign)
 set -euo pipefail
 cd "$(dirname "$0")/../.."   # repository root
 STYLES="${1:-all}"; [ "$STYLES" = all ] && STYLES="unrestricted faithful rewrite expedient"
-D=test/campaign; mkdir -p "$D/results"
+D="test/${SET:-campaign}"; mkdir -p "$D/results"
 lake build semanteq >/dev/null
 for s in $STYLES; do
   dirs=$(ls -d "$D/proofs/$s"/* | sort)

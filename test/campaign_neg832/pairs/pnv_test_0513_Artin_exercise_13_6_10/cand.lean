@@ -1,0 +1,6 @@
+import Mathlib
+
+open Function Fintype Subgroup Ideal Polynomial Submodule Zsqrtd
+open scoped BigOperators
+
+theorem dummy {K : Type*} [Field K] [Fintype K] [Fintype Kˣ] (hK : Fintype.card K = Fintype.card Kˣ + 1) : ∏ (x : Kˣ), x = -1 := sorry

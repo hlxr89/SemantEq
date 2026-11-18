@@ -1,0 +1,30 @@
+import Mathlib
+
+open Filter Set
+
+-- ===== unified context (both sides' local defs, merged) =====
+namespace Erdos41
+
+variable {α : Type} [AddCommMonoid α]
+
+def NtupleCondition (A : Set α) (n : ℕ) : Prop :=
+  ∀ I J : Multiset α,
+    (∀ i ∈ I, i ∈ A) →
+    (∀ j ∈ J, j ∈ A) →
+    I.card = n →
+    J.card = n →
+    I.sum = J.sum →
+    I = J
+
+-- ===== assumed statement (antecedent) =====
+theorem erdos_41_assumed (A : Set ℕ) (h_triple : NtupleCondition A 3) (h_infinite : A.Infinite) :
+    Filter.atTop.liminf (fun N => (A ∩ Icc 1 N).ncard / (N : ℝ)^(1/3)) = 0 := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem erdos_41_goal (A : Set ℕ) (h_triple : NtupleCondition A 3) (h_infinite : A.Infinite) :
+    Filter.atTop.liminf (fun N => (A ∩ Icc 1 N).ncard / (N : ℝ)^(1/3 : ℝ)) = 0 := by
+  -- not proved: the candidate's natural exponent collapses to zero and does not imply the real-exponent asymptotic
+  sorry
+
+end Erdos41

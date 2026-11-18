@@ -74,11 +74,11 @@ readings coincide because a severe use is already a failure; the agreement
 line then compares against the manifest's default-mode verdicts, so the
 directions the strict mode fails show up as disagreements.
 
-Expected, over all 511 pairs (the paper's Table 3 and Appendix Table 4):
+Expected, over all 511 pairs (the top panels of the paper's Table 3 and Table 8):
 
 | style | equivalent, tolerant | equivalent, strict | non-equivalent, tolerant | non-equivalent, strict |
 |---|---|---|---|---|
-| unrestricted | 322/53/32 | 317/56/34 | 0/57/47 | 0/50/54 |
-| faithful     | 330/50/27 | 323/56/28 | 0/67/37 | 0/59/45 |
-| rewrite      | 329/51/27 | 323/56/28 | 0/70/34 | 0/64/40 |
-| expedient    | 309/40/58 | 303/45/59 | 0/49/55 | 0/46/58 |
+| unrestricted | 328/51/28 | 323/54/30 | 0/57/47 | 0/49/55 |
+| faithful     | 334/50/23 | 327/56/24 | 0/67/37 | 0/59/45 |
+| rewrite      | 336/49/22 | 329/55/23 | 0/70/34 | 0/64/40 |
+| expedient    | 314/40/53 | 308/45/54 | 0/49/55 | 0/46/58 |

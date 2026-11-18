@@ -1,0 +1,18 @@
+import Mathlib
+
+open Function Fintype Subgroup Ideal Polynomial Submodule Zsqrtd
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem exercise_6_4_12_assumed {G : Type*} [Group G] [Fintype G]
+  (hG : card G = 224) :
+  IsSimpleGroup G → false := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem dummy {G : Type*} [Group G] [Fintype G] (h : Fintype.card G = 2^4 * 7) : ∃ H : Subgroup G, H ≠ ⊥ ∧ H ≠ ⊤ := by
+  -- not proved: the antecedent concerns order 224 and non-simplicity, while the goal concerns order 112 and an arbitrary proper nontrivial subgroup; no re-expression bridge connects them
+  sorry

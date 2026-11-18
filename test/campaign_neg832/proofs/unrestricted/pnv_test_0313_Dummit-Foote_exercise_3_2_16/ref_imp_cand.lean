@@ -1,0 +1,19 @@
+import Mathlib
+
+open Fintype Subgroup Set Polynomial Ideal
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- The unified context is empty.
+
+-- ===== assumed statement (antecedent) =====
+theorem exercise_3_2_16_assumed (p : ℕ) (hp : Nat.Prime p) (a : ℤ) :
+  a ^ p ≡ a [ZMOD p] := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem dummy {p : ℕ} (hp : Nat.Prime p) (a : ℕ) : (a ^ p) % p = a % p := by
+  have h := exercise_3_2_16_assumed p hp (a : ℤ)
+  have h' : (↑(a ^ p) : ℤ) ≡ ↑a [ZMOD ↑p] := by
+    simpa using h
+  exact Int.natCast_modEq_iff.mp h'

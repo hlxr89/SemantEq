@@ -182,6 +182,25 @@ watchdog sets a cancel token that every `runMetaM` hands to Lean's interrupt
 check; the pair then reports `Timeout`), and the CLI (batch mode, `--proof`
 mode, strength flags).
 
+## The four steps in the two programs
+
+The relation is defined by four kinds of step (Definition 1 of the paper).
+The table says where each step appears in the two programs, as Table 4 of
+the paper does. The stages are those of the search ladder: 1 direct use, 2
+normalisation, 3 logical rearrangement, 4 restricted lemma discovery, 5
+bridge rewriting.
+
+| Step | SemantEq-Eval | SemantEq-ProofAudit, what is accepted in the proof term |
+|---|---|---|
+| Logical rearrangement | Stage 3, which matches the logical components of the two statements, and the logical identities of stage 2 | Introduction and elimination rules of the connectives |
+| Bridge rewriting | Stages 4 and 5, which rewrite along library equations and biconditionals | A conversion along a library equation or biconditional |
+| Change of variables | Applying the antecedent at objects of the goal, in stages 1 and 3 | An application of the antecedent whose arguments are the goal's own objects |
+| Structural weakening | Dropping conjuncts, giving witnesses and adding hypotheses, in stage 3 | The same logical rules as rearrangement |
+
+The audits perform no step. They refuse proofs that are valid in Lean but do
+not follow these steps, and the few uses that SemantEq-ProofAudit tolerates
+outside them are recorded with each verdict.
+
 ## Design principles
 
 - **Acceptance is faithfulness, not provability.** Both sides being true is

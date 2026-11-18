@@ -1,0 +1,18 @@
+import Mathlib
+
+open Fintype Complex Polynomial LinearMap FiniteDimensional Module Module.End
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem exercise_1_9_assumed {F V : Type*} [AddCommGroup V] [Field F]
+  [Module F V] (U W : Submodule F V):
+  (∃ U' : Submodule F V, U'.carrier = ↑U ∪ ↑W) ↔ (U ≤ W ∨ W ≤ U) := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem dummy {V : Type*} [AddCommGroup V] [Module ℤ V] (W₁ W₂ : Submodule ℤ V) : (W₁ ≤ W₂) ∧ (W₂ ≤ W₁) → (W₁ ⊔ W₂ = W₁) ∨ (W₁ ⊔ W₂ = W₂) := by
+  -- not proved: the antecedent requires a module over a field and cannot be instantiated for an arbitrary ℤ-module
+  sorry

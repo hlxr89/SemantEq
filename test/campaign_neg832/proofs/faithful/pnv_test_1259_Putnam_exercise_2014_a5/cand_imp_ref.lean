@@ -1,0 +1,17 @@
+import Mathlib
+
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem dummy_assumed {p : ℕ} (hp : 2 < p) (hpr : p.Prime) {a b : ℕ} (ha : 0 < a) (hb : 0 < b) (hab : a < b) (hab2 : a < b ^ 2) : ∃ (x y z w : ℕ), p = x ^ 2 + y ^ 2 + z ^ 2 + w ^ 2 := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem exercise_2014_a5 (P : ℕ → Polynomial ℤ)
+  (hP : ∀ n, P n = ∑ i : Fin n, (n+1) * Polynomial.X ^ n) :
+  ∀ (j k : ℕ), j ≠ k → IsCoprime (P j) (P k) := by
+  -- not proved: the candidate statement cannot imply the false reference statement
+  sorry

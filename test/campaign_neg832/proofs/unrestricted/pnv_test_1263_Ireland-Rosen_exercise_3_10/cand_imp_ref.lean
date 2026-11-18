@@ -1,0 +1,19 @@
+import Mathlib
+
+open Real
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- Empty: neither preamble contains local definitions or structures.
+
+-- ===== assumed statement (antecedent) =====
+theorem dummy_assumed {n : ℕ} (hn : ¬ Prime n) : n.factorial % n = 0 ∨ n = 4 := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem exercise_3_10 {n : ℕ+} (hn0 : ¬ n.Prime) :
+  Nat.factorial (n-1) ≡ 0 [MOD n] ↔ n ≠ 4 := by
+  have hfalse : False := by
+    have h0 := dummy_assumed (n := 0) (by norm_num)
+    norm_num at h0
+  exact hfalse.elim

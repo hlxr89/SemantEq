@@ -1,0 +1,16 @@
+import Mathlib
+
+open Fintype Set Real Ideal Polynomial
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem exercise_4_6_2_assumed : Irreducible (X^3 + 3*X + 2 : Polynomial ℚ) := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem dummy {n : ℕ} (hn : 0 < n) (a b : ℕ) (h : a * b = n) (ha : Irreducible a) (hb : Irreducible b) : Irreducible n := by
+  -- not proved: the candidate is false (for example, n = 6, a = 2, b = 3), while the assumed cubic statement is true
+  sorry

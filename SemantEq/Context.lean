@@ -277,16 +277,17 @@ declarations are shared (`tryPartialShare`) and the candidate's remainder is
 elaborated in its own namespace. Otherwise each side keeps its own namespace.
 `candIsoName` is the candidate statement's full name from its isolated
 compile; when it is anonymous, neither sharing path runs. -/
-def buildBranchedContext (refSrc candSrc : SideSource)
+def buildBranchedContextCore (refSrc candSrc : SideSource)
     (refDeclStart candDeclStart : Position) (opts : Options := {})
     (candIsoName : Name := .anonymous)
+    (refPreOverride candPreOverride : Option String := none)
     : IO BranchedContext := do
   match ← mkBaseEnv (unionImports refSrc.imports candSrc.imports) opts with
   | .error es => return { importErrors := es }
   | .ok base =>
-  let refPre := refSrc.preambleBefore refDeclStart
+  let refPre := refPreOverride.getD (refSrc.preambleBefore refDeclStart)
   -- the shared-preamble path (see the doc comment above)
-  let candPre := candSrc.preambleBefore candDeclStart
+  let candPre := candPreOverride.getD (candSrc.preambleBefore candDeclStart)
   let gNorm := normalizeCode refPre == normalizeCode candPre
   let gDecl := declaringPreamble refPre
   let sharedCandStmt? : Option String :=
@@ -324,7 +325,7 @@ def buildBranchedContext (refSrc candSrc : SideSource)
   | none =>
   -- candidate preamble: a fresh state (scopes must not leak across sides) on
   -- the grown environment; partial sharing first, the full text as fallback
-  let candPreFull := candSrc.preambleBefore candDeclStart
+  let candPreFull := candPre
   let level2? ←
     if candIsoName != .anonymous && declaringPreamble refPre
         && declaringPreamble candPreFull then
@@ -365,4 +366,112 @@ def buildBranchedContext (refSrc candSrc : SideSource)
   | .ok sFull =>
   return { envA? := some sA.env, envB? := some sB.env,
            envFull? := some sFull.env }
+/-- Retry repair 1, for a statement written with a command prefix on the lines just before it
+(`open scoped Classical in` followed by `theorem …`, blank lines allowed between). The prefix belongs to the statement, but the
+preamble ends at the `theorem` keyword and then stops in a dangling prefix. The result is the start
+of the first such prefix line, or `declStart` when there is none. -/
+def SideSource.prefixStart (src : SideSource) (declStart : Position) : Position := Id.run do
+  let lines := (src.input.splitOn "\n").toArray
+  let isPrefix (l : String) : Bool :=
+    let t := l.trimAscii.copy
+    ("open ".isPrefixOf t || "set_option ".isPrefixOf t) && t.endsWith " in"
+  if declStart.line == 0 || declStart.line > lines.size then return declStart
+  let own := String.ofList ((lines[declStart.line - 1]!).toList.take declStart.column)
+  if isPrefix own then return { line := declStart.line, column := 0 }
+  if !own.trimAscii.copy.isEmpty then return declStart
+  -- walk up over prefix lines and blank lines; start at the topmost prefix line
+  let mut first := declStart.line
+  let mut k := declStart.line
+  while k ≥ 2 && (isPrefix lines[k - 2]! || lines[k - 2]!.trimAscii.copy.isEmpty) do
+    k := k - 1
+    if isPrefix lines[k - 1]! then first := k
+  if first == declStart.line then return declStart
+  return { line := first, column := 0 }
+
+/-- Retry repair 2, for helper definitions that extend a namespace of the imported library
+(`namespace Nat … end Nat`, `def Set.IsAPOfLength …`). Under the side's wrapper namespace they
+would land in `SemantEqRef.Nat`, where dot notation (`n.Full` for `n : ℕ`) and the library
+namespace's own names (`Iio` inside `namespace Set`) no longer resolve. Such a block is closed out
+of the wrapper, and such a dotted name gets `_root_.`, as in the file compiled alone. A block whose
+code already appears in `dropBlocks` (the other side declared it at the root) is left out. The
+result is the new text and the code of the blocks moved to the root. Constants declared this way
+are still local to the input (`isLocalConst` goes by module), but they are shared by both sides. -/
+def hoistLibraryNamespaces (base : Environment) (wrapper : Name) (pre : String)
+    (dropBlocks : Array String := #[]) : String × Array String × Bool := Id.run do
+  let lines := (pre.splitOn "\n").toArray
+  let libNs (x : String) : Bool := base.isNamespace x.toName.getRoot
+  let mut out : Array String := #[]
+  let mut moved : Array String := #[]
+  let mut changed := false
+  let mut stack : Array Bool := #[]  -- open scopes of the side; `true` for a namespace
+  let mut i := 0
+  while i < lines.size do
+    let l := lines[i]!
+    let t := l.trimAscii.copy
+    let ws := t.splitOn " "
+    let inNs := stack.any id
+    if ws.length == 2 && ws[0]! == "namespace" && !inNs && libNs ws[1]! then
+      let x := ws[1]!
+      let mut j := i + 1
+      while j < lines.size && lines[j]!.trimAscii.copy != s!"end {x}" do
+        j := j + 1
+      if j < lines.size then
+        let block := String.intercalate "\n" (lines.extract i (j + 1)).toList
+        let code := normalizeCode block
+        changed := true
+        unless dropBlocks.contains code do
+          out := out.push s!"end {wrapper}" ++ (lines.extract i (j + 1)) |>.push s!"namespace {wrapper}"
+          moved := moved.push code
+        i := j + 1
+        continue
+    if ws[0]! == "namespace" then
+      stack := stack.push true
+    else if ws[0]! == "section" || t == "noncomputable section" then
+      stack := stack.push false
+    else if ws[0]! == "end" then
+      stack := stack.pop
+    else if !inNs then
+      -- a declaration head `[modifiers] keyword Name.sub …` at the top level of the side
+      let mods := ["noncomputable", "private", "protected", "partial", "unsafe"]
+      let kws := ["def", "abbrev", "theorem", "lemma", "structure", "inductive", "class"]
+      let k := (ws.takeWhile (mods.contains ·)).length
+      if k + 1 < ws.length && kws.contains ws[k]! then
+        let nm := ws[k + 1]!
+        if nm.contains '.' && !"_root_.".isPrefixOf nm && libNs nm then
+          let ws' := ws.set (k + 1) ("_root_." ++ nm)
+          out := out.push (String.intercalate " " ws')
+          changed := true
+          i := i + 1
+          continue
+    out := out.push l
+    i := i + 1
+  return (String.intercalate "\n" out.toList, moved, changed)
+
+/-- `buildBranchedContextCore`, and when a side's preamble or statement fails to elaborate, one
+retry with the two input repairs above (`prefixStart`, `hoistLibraryNamespaces`). A pair whose
+context builds on the first attempt is never touched by the repairs. -/
+def buildBranchedContext (refSrc candSrc : SideSource)
+    (refDeclStart candDeclStart : Position) (opts : Options := {})
+    (candIsoName : Name := .anonymous)
+    : IO BranchedContext := do
+  let r ← buildBranchedContextCore refSrc candSrc refDeclStart candDeclStart opts candIsoName
+  if r.envFull?.isSome || !r.importErrors.isEmpty then return r
+  match ← mkBaseEnv (unionImports refSrc.imports candSrc.imports) opts with
+  | .error _ => return r
+  | .ok base =>
+  let refD := refSrc.prefixStart refDeclStart
+  let candD := candSrc.prefixStart candDeclStart
+  let refPre0 := refSrc.preambleBefore refD
+  let candPre0 := candSrc.preambleBefore candD
+  let (refPre, moved, refCh) := hoistLibraryNamespaces base refNamespace refPre0
+  -- code-identical preambles keep the shared path: the candidate gets the same text
+  let (candPre, _, candCh) :=
+    if normalizeCode refPre0 == normalizeCode candPre0 then (refPre, #[], refCh)
+    else hoistLibraryNamespaces base candNamespace candPre0 moved
+  if !refCh && !candCh && refD == refDeclStart && candD == candDeclStart then return r
+  if (← getConfig).trace then
+    IO.eprintln s!"[context] retry with input repairs: prefix ref={refD != refDeclStart} cand={candD != candDeclStart}, root blocks ref={refCh} cand={candCh}"
+  let r2 ← buildBranchedContextCore refSrc candSrc refD candD opts candIsoName
+    (some refPre) (some candPre)
+  return if r2.envFull?.isSome then r2 else r
 end SemantEq

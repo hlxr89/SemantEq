@@ -1,0 +1,31 @@
+import Mathlib
+
+open Nat Set MeasureTheory Topology Filter
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem putnam_1973_b3_assumed
+(p : ℕ)
+(pgt1 : p > 1)
+(hprime : ∀ x ∈ Set.Ico 0 p, Nat.Prime (x^2 - x + p))
+: ∃! triple : ℤ × ℤ × ℤ, let (a,b,c) := triple; b^2 - 4*a*c = 1 - 4*p ∧ 0 < a ∧ a ≤ c ∧ -a ≤ b ∧ b < a :=
+by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem problem_statement (p : ℕ) (hp : p > 1) 
+  (h : ∀ x : ℕ, 0 < x ∧ x < p → Nat.Prime (x^2 - x + p)) :
+  ∃! (triple : ℤ × ℤ × ℤ), 
+    let (a, b, c) := triple
+    (b^2 - 4*a*c = (1 : ℤ) - 4*(p : ℤ)) ∧ 
+    (0 < (a : ℤ)) ∧ 
+    ((a : ℤ) ≤ (c : ℤ)) ∧ 
+    (-(a : ℤ) ≤ b) ∧ 
+    (b < (a : ℤ)) := by
+  apply putnam_1973_b3_assumed p hp
+  intro x hx
+  rcases eq_or_lt_of_le hx.1 with rfl | hx0
+  · simpa using h 1 ⟨by omega, hp⟩
+  · exact h x ⟨hx0, hx.2⟩

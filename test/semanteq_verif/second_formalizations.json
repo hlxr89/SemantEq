@@ -1,0 +1,574 @@
+{
+ "repository": "plby/lean-proofs",
+ "commit": "8822f7ddef30fadbd92e1c6ab4ed897af356af5e",
+ "candidates": {
+  "Erdos83-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos83.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     528
+    ]
+   ],
+   "sha256": "cb64b3324564e1d7f27cabadbf93c10ad0775d5f7cf36e3866e3d2a9bea47e9f",
+   "source_sha256": "35404264722c655c0d070e99d668e6883776a3b2700314c294ba1284bc069489"
+  },
+  "Erdos116-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos116.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     331
+    ]
+   ],
+   "sha256": "f92f8936420f67a33287547e4a9d08a453c587b4ec2ad9cd11949e34690417bb",
+   "source_sha256": "443d85dd8b5eba5d444483e34ace8503c5dc2eb4a5773b5ef187246bb823b0fc"
+  },
+  "Erdos171-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos171.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     466
+    ]
+   ],
+   "sha256": "1e52c14ca2985c6688075d43018820cabfacca86fdb6283319635ed844c2b674",
+   "source_sha256": "ac2077e69ea8e9e48248a213f4164c5846e01287532eddf75dbe92ad1eeb4655"
+  },
+  "Erdos175-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos175.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     194
+    ]
+   ],
+   "sha256": "974526f04719c5532c55ad8e7b7b4d30a33525634919ce5098c1455b9cec9ba3",
+   "source_sha256": "ba93a4160638399b2c0a679983683eecf9a6f8c6b628cc75f86ba63ab4d10e43"
+  },
+  "Erdos259-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos259.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     243
+    ]
+   ],
+   "sha256": "69ab09e38e6a2b8da075c3d9c208a46fc0bb4746333c91819c6684f999867393",
+   "source_sha256": "d0e6c92a9d822be6517ddfa1c5a6e3743928c416df8c342006496cae509966bf"
+  },
+  "Erdos267-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos267.lean",
+   "ops": [
+    [
+     "keep",
+     0,
+     35
+    ],
+    [
+     "keep",
+     169,
+     409
+    ]
+   ],
+   "sha256": "014c66c2b19dd89a25270d64b686c80e6481b8822b1ce43362dc67593f080203",
+   "source_sha256": "32c6356f272790b43c64a88efc587d9a43c0d95517fa10f0f4f5a347d01012e4"
+  },
+  "Erdos268-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos268.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     401
+    ]
+   ],
+   "sha256": "473d2e468885e3bc1ed959d46270f1c0ff3b29645d46166486c8bacb0e18cbcf",
+   "source_sha256": "255b82edd04ee622a5cb40c69f4880de62385c68b4f7111efd3e178c0741aba3"
+  },
+  "Erdos284-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos284.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     78
+    ],
+    [
+     "keep",
+     367,
+     386
+    ],
+    [
+     "keep",
+     471,
+     591
+    ],
+    [
+     "keep",
+     705,
+     842
+    ],
+    [
+     "keep",
+     917,
+     1153
+    ]
+   ],
+   "sha256": "b56751faadfd62e329ec009f6446009ca7d238bba077aad79e0c14845588b271",
+   "source_sha256": "d40f21bb32d98201298a9c326482c02d3f4486472d0c38c4be3596c5f649a618"
+  },
+  "Erdos310-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos310.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     423
+    ]
+   ],
+   "sha256": "5a9d84ebe9ef0ec0018f069425480c00baae9ee8fc1e082b8557d34eafb2bf90",
+   "source_sha256": "2fd0463ec6e551c666bfe211de3a3b221c8483a8d5e6101cf00c74cb56065962"
+  },
+  "Erdos384-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos384.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     84
+    ],
+    [
+     "keep",
+     161,
+     408
+    ]
+   ],
+   "sha256": "d00b83392b9c5a34601033a5b966b42591a05529829d5b83e93e8f3214fd295f",
+   "source_sha256": "8cd4c8da96b9b6f6cefddc798e4a4b8143c521adcc953c4a98a9efe31a8f4c64"
+  },
+  "Erdos392-2": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos392.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     315
+    ]
+   ],
+   "sha256": "523eddaf73c68909354ec88ff0d5f40301d3c197c6bcacd571527b0a19703a04",
+   "source_sha256": "3fab4daa5469c59d087066f847359c44abd776513abc34fe03ceb5cb162b7774"
+  },
+  "Erdos395-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos395.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     352
+    ],
+    [
+     "insert",
+     "noncomputable "
+    ],
+    [
+     "keep",
+     352,
+     702
+    ]
+   ],
+   "sha256": "9aac68af45ce6c769458e2a999fb72e278b0a63829690b41663aa238e08f3af3",
+   "source_sha256": "b3c140a0db78eba15323b8e92d4318f0cc6e3feb2d6ef28f08c81116c05ce9e4"
+  },
+  "Erdos402-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos402.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     237
+    ],
+    [
+     "insert",
+     "\nend Erdos402\n"
+    ]
+   ],
+   "sha256": "6346cdf6261486cb2e9efc3acd91ecba94ca66602bd27614dbab0c34f0924317",
+   "source_sha256": "1f5a075e3da105df33cc4365f76263e5ffff07da5a8049208379a582d267b666"
+  },
+  "Erdos405-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos405.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     84
+    ],
+    [
+     "keep",
+     157,
+     453
+    ]
+   ],
+   "sha256": "e30fbcdc61b21d3205e32cac0c300b17e349406ddcf9ffabae63b0853f1e96d8",
+   "source_sha256": "660b00fb0ef27f05200098621e18e87d77ddedf3dfbe8c182bd0731f165ffb67"
+  },
+  "Erdos490-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos490.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     389
+    ]
+   ],
+   "sha256": "6f19e013e6e64788ce861057bb707736bdafe75f8214004f4f51f315eae5d76f",
+   "source_sha256": "373d6111bdf61258bf11c814f8b538dc16e86eaab6bda9b46fcdfd9da38e1416"
+  },
+  "Erdos491-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos491.lean",
+   "ops": [
+    [
+     "keep",
+     0,
+     40
+    ],
+    [
+     "keep",
+     132,
+     390
+    ]
+   ],
+   "sha256": "3a23b498bf9d70b07bb2695d1c0d356a1647c95c845dac6f0fcdf3f73c7cd1cb",
+   "source_sha256": "6f3bba55e385255f159fe39d239ae37a347e3cf876bb7a7f87f64e5b63910669"
+  },
+  "Erdos498-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos498.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     446
+    ]
+   ],
+   "sha256": "a0f086ae4f5f642742cc24430927fa6fd11840c38de6600595c9be4f72b3ea32",
+   "source_sha256": "ed30e3f98c1e4ab668e1da8c378f3f61277eda29b494531d28c106f370b1555f"
+  },
+  "Erdos512-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos512.lean",
+   "ops": [
+    [
+     "keep",
+     48,
+     83
+    ],
+    [
+     "keep",
+     174,
+     370
+    ]
+   ],
+   "sha256": "ad1eb75ae353eae5fd8f36d547adf8841698a19661b01dadce5252b5017f6ab6",
+   "source_sha256": "e7af726501c2530ed71545567278d863d46789a57073b18b5883491a5956fc51"
+  },
+  "Erdos519-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos519.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     336
+    ]
+   ],
+   "sha256": "99137ca9dbd8dd44c3a189daf78d22fb800b4e2fa6ada886c571758d7df3b9b5",
+   "source_sha256": "44c385ee6ef0730b457d17ad163364f47c7b5cba683124030d8a17097af441bd"
+  },
+  "Erdos540-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos540.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     387
+    ]
+   ],
+   "sha256": "60a222372517d50f039f659c564d86c909dca7eb97b85939ecdba42aba999b1c",
+   "source_sha256": "ba9b1eb2a05c48623441c24294261f2e9998b434dbe74aa40d5902f2891dc65b"
+  },
+  "Erdos674-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos674.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     258
+    ]
+   ],
+   "sha256": "9cff986ae709d544ba0fa7a28c7282dbb98e2bdeb26e1e9e79c3a7ee7afe978b",
+   "source_sha256": "a8ff82776c42c14a61cdda0469772fcf5f128bfc77593d3cf672a45961ddfa92"
+  },
+  "Erdos698-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos698.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     306
+    ]
+   ],
+   "sha256": "cef215cd51d71b67fd7facdfb6916bb0ed389f6a2dca8abc7b70a49f0a90e81e",
+   "source_sha256": "da751be3e882bb2ada9d604230a29ac19f10431026948a8e5d2a9821a7d44b2d"
+  },
+  "Erdos793-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos793.lean",
+   "ops": [
+    [
+     "keep",
+     48,
+     117
+    ],
+    [
+     "keep",
+     246,
+     352
+    ],
+    [
+     "keep",
+     461,
+     796
+    ]
+   ],
+   "sha256": "8cc97013929f4be21e50a182a5aac384a7f59df981373d8d41af09e7cf64ae4d",
+   "source_sha256": "c29073d7d3f7fe7d0b87b1c4a9b788bee710008c317a7c37fd1a1057784ede7b"
+  },
+  "Erdos818-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos818.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     323
+    ]
+   ],
+   "sha256": "d34b601a2c4fed53be299bbd1b3e3b527608eabc7fbb9374c80cfdda34173a86",
+   "source_sha256": "4ba70282601db41a7be62885caac04dd629bc3899e9b440cd1f3a4e8c64af8d2"
+  },
+  "Erdos823-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos823.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     377
+    ]
+   ],
+   "sha256": "ad67109495089bd08c9a33fabbe21acac1600cfd2f9f6d1d43872f788d3213b7",
+   "source_sha256": "fc360498ae91f90ee4042882446b4edc72a65867bc532d2d631af099614ea36c"
+  },
+  "Erdos848-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos848.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     84
+    ],
+    [
+     "keep",
+     380,
+     480
+    ],
+    [
+     "keep",
+     840,
+     1117
+    ],
+    [
+     "insert",
+     "\nend Erdos848\n"
+    ]
+   ],
+   "sha256": "ef34d3ba16b29d796291dc3419024341a00be06dfbd8ef508bf07a3ed437090d",
+   "source_sha256": "c12593a32f051745cb6e07119f94e63ffef9ae143f2812a32f722546990c9b6a"
+  },
+  "Erdos865-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos865.lean",
+   "ops": [
+    [
+     "keep",
+     185,
+     220
+    ],
+    [
+     "keep",
+     314,
+     605
+    ]
+   ],
+   "sha256": "80b6777c99e8b6b24c1ea4eab2d0d82bd0ca22c0e731c78d91d6b2aa5e442f0c",
+   "source_sha256": "33f4346e5caf56019a4a6ded5ee3f3c76087575cae435834dcec6bbf8bb8cbe3"
+  },
+  "Erdos907-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos907.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     356
+    ]
+   ],
+   "sha256": "c12aebd13669f459c09de2a67d8c5f92f266b3d83c7b5d367f5c8039d1cac91c",
+   "source_sha256": "536537ea74db322d1db4dd23c7158cbc4127c6fd0027d137be69674caead40e9"
+  },
+  "Erdos948-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos948.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     378
+    ]
+   ],
+   "sha256": "953aaf96c36f229a71cd7864a36ffd0958be1f0caeda4035db08e53e8d6e0ed0",
+   "source_sha256": "a17d8fd3268b06f576eabf76c5cb651e49787bba42ff08d0d21c0b6c2c8eedf1"
+  },
+  "Erdos1000-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos1000.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     523
+    ]
+   ],
+   "sha256": "433fb9770f99f1eb1f213089d0169d5440449c546d541e9ce58a71d77aa3fecb",
+   "source_sha256": "788b03fb2bfea8fc1b59799c4431e5c111c9a792b0b3a3778fdf803fcc7e1e73"
+  },
+  "Erdos1037-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos1037.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     579
+    ]
+   ],
+   "sha256": "62ae58d2f2d0ed15e2c3942e45d38972e7411fc942d9879a2967ac0123204519",
+   "source_sha256": "4383984b31b49749eb009701dd456760f0f413680ba78e1138db156211882255"
+  },
+  "Erdos1046-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos1046.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     82
+    ],
+    [
+     "keep",
+     210,
+     230
+    ],
+    [
+     "keep",
+     287,
+     505
+    ]
+   ],
+   "sha256": "647275a4cafdc58034cac9a92c6659e29eb74c29cffc670fe1f0f3d3abc85292",
+   "source_sha256": "409a6666043b2d7d18c64c5ebf80b4f89480bd1551f9ba12c6206adb297ea72a"
+  },
+  "Erdos1050-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos1050.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     63
+    ],
+    [
+     "keep",
+     164,
+     186
+    ],
+    [
+     "keep",
+     284,
+     359
+    ],
+    [
+     "keep",
+     434,
+     595
+    ]
+   ],
+   "sha256": "53fb6565be697f2663a1bf2269ded044179eedcf4e70548db567ff62e0fb6c4e",
+   "source_sha256": "6888ce473a040787703606bbd35e2e9e1639bd1806d9c4ed66b8b95e0b867893"
+  },
+  "Erdos1098-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos1098.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     426
+    ]
+   ],
+   "sha256": "a138a5af59a3e56229ff65f781462c11c5edc1ea1512802b2b58398e8daa7475",
+   "source_sha256": "3e49e212ec76f5c644128b2a122686b6fcd89ffa0807a1291b1057873b57da3b"
+  },
+  "Erdos1125-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos1125.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     236
+    ]
+   ],
+   "sha256": "f59c0dd703bfadc3c1ef3e66a694906a87aad3164bd8708e5118a1d5e890d157",
+   "source_sha256": "ee13af5de053a4bd0314f3a5a92346864f19bcf59f04dcbf91764cf2869139a7"
+  },
+  "Erdos1126-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos1126.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     346
+    ]
+   ],
+   "sha256": "0c7f0f63060fa74c019f6d53888132ade61ac8a35db0c05e0f78dc322e16e799",
+   "source_sha256": "04d7810bacd421d70c3354900b4cd50b110f79225454818a2bf13503e678e605"
+  },
+  "Erdos1140-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos1140.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     257
+    ]
+   ],
+   "sha256": "6f83c3923084b72545eab4cba2a5f90d2d7cab8f6d37bdb543447d0b4482d6f9",
+   "source_sha256": "f3b7724f3449939bf88f7db7bd606c84dac84c9bf33ebb1f94ee3e0fcdb53167"
+  },
+  "Erdos1148-1": {
+   "path": "src/latest/ComparatorChallenges/ErdosProblems/Erdos1148.lean",
+   "ops": [
+    [
+     "keep",
+     49,
+     251
+    ]
+   ],
+   "sha256": "6da7753ab3c73d2314d912daf00355a910c754d88eb98a1f36d7d112bdd890e2",
+   "source_sha256": "89c66476e3a36d776ef9ce305ac02a0422f2469e458d966aacb8ed2b91ed52cf"
+  }
+ }
+}

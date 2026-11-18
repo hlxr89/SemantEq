@@ -1,0 +1,17 @@
+import Mathlib
+
+open Fintype Subgroup Set Polynomial Ideal
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem dummy_assumed {G H : Type*} [Group G] [Group H] [hG : IsSolvable G] (f : G →* H) : IsSolvable H := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem exercise_3_4_5b {G : Type*} [Group G] [IsSolvable G]
+  (H : Subgroup G) [Normal H] :
+  IsSolvable (G ⧸ H) := by
+  exact dummy_assumed (QuotientGroup.mk' H)

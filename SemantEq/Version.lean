@@ -12,7 +12,7 @@ attributable to the exact program that produced them.
 namespace SemantEq
 
 /-- Version tag of the program; bump it on any behaviour change. -/
-def version : String := "v1.4.1"
+def version : String := "v1.4.2"
 
 /-- Best-effort git identity of the working tree at run time: short commit hash
 and whether the tree is dirty. `unknown` outside a git checkout. -/

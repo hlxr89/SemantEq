@@ -45,7 +45,7 @@ mention your project's definitions. Add to your `lakefile.toml`:
 [[require]]
 name = "SemantEq"
 git = "<this repo>"
-rev = "v1.4.0"
+rev = "v1.4.2"
 ```
 
 then `lake build` in your project (and `lake exe cache get` if your project
@@ -306,11 +306,14 @@ Mathlib versions with no change of method.
 | **ProofNetVerif test split**, 1,303 compilable pairs, published labels | precision **100.0**, recall **51.4** | precision 96.6, recall 48.8 |
 | same pairs, adjudicated labels¹ | precision **100.0**, recall **65.6** | precision 95.8, recall 61.8 |
 | **Ablation set**, 100 non-equivalent pairs² (false accepts) | **0** | 54 |
+| **SemantEq-Verif**, 226 pairs³ | precision **100.0**, recall **25.0** | precision 100.0, recall 22.8 |
 
 | | SemantEq-ProofAudit |
 |---|---|
-| model-written proofs, 407 equivalent pairs, certified in both directions | **330** (323 in `--strict` mode) |
+| model-written proofs, 407 equivalent pairs, certified in both directions | **336** under the best of four prompts (329 in `--strict` mode) |
 | model-written proofs, 104 non-equivalent pairs, certified in both directions | **0** |
+| model-written proofs for the full ProofNetVerif test split, 1,303 pairs, by prompt | precision 89.7 to 96.3, recall 77.5 to 82.9 (93.2 to 97.6 and 76.2 to 81.3 in `--strict` mode) |
+| model-written proofs for SemantEq-Verif³, by prompt | precision 85.7 to 92.9, recall 47.8 to 56.5 (95.5 to 100.0 and 42.4 to 48.9 in `--strict` mode) |
 
 ¹ We audited every label of the benchmark's test split and changed 102, every
 one from equivalent to non-equivalent; the adjudicated labels are released in
@@ -323,6 +326,9 @@ constructed pairs, one class for each failure mode of the paper's Section 2
 (`test/eval/ablation/`). Removing all four audits from SemantEq-Eval admits
 35 of the 100; the restricted move vocabulary alone still rejects 20 of the
 54 pairs BEq+ accepts.
+
+³ A second benchmark of 226 labelled pairs on IMO, Putnam and Erdős problems,
+with one label set (`test/semanteq_verif/`).
 
 The bundled suites reproduce their expected outcomes on the current build:
 the ProofChecker corpus 31/31 in both modes, the 50 constructed pairs of the ablation
@@ -349,12 +355,20 @@ reproduces the case studies discussed in its appendices.
   with the checker's verdict and marks for each in default and in strict
   mode, and a runner that re-checks a style and prints the paper's table;
   see its README.
+- `test/campaign_neg832/` — the same for the 832 test pairs that
+  ProofNetVerif labels not equivalent, so that the two folders cover the full
+  test split.
+- `test/semanteq_verif/` — SemantEq-Verif: the 226 pairs, how they were
+  built, the model-written proofs and the checker's verdicts. Thirty-eight
+  candidates come from a repository without a licence and are rebuilt by a
+  fetch script; see its README.
 - `test/results/` — the per-pair record behind the paper's tables, one line per
   pair: the verdict of SemantEq-Eval and of the BEq+ port on the
   ProofNetVerif test split under both label sets, of the six ablation arms
-  on the ablation set, and of every search configuration on the equivalent
-  set with its running time. The BEq+ verdicts are the only part of the
-  paper's numbers that the reproduction below cannot regenerate.
+  on the ablation set, of every search configuration on the equivalent
+  pairs of the certification set with its running time, and of both judges
+  on SemantEq-Verif. The BEq+ verdicts are the only part of the paper's
+  numbers that the reproduction below cannot regenerate.
 
 **Reproducing the tables from scratch.** `test/reproduce.sh` re-runs the
 programs on the released statements and proofs, stage by stage, and
@@ -365,17 +379,24 @@ python3 test/pnv_fetch.py                  # ProofNetVerif from Hugging Face (ne
 test/reproduce.sh corpus                   # both modes, ~10 min
 test/reproduce.sh suites                   # ~30 min
 LANES=3 test/reproduce.sh ablation         # Table 2,  ~2 h (+6 h for the ProofNetVerif half)
-LANES=3 test/reproduce.sh campaign         # Tables 3 and 4, ~1.5 h
+LANES=3 test/reproduce.sh campaign         # top panels of Tables 3 and 8, ~1.5 h
+LANES=3 test/reproduce.sh neg832           # Tables 15, 8 (bottom panel) and 9
+python3 test/semanteq_verif/fetch_second_formalizations.py   # the 38 candidates that are not redistributed
+LANES=3 test/reproduce.sh verif            # Tables 1 (second section), 3 (bottom panel), 17 to 19
 LANES=3 test/reproduce.sh pnv              # Table 1,  ~4 h
-LANES=3 test/reproduce.sh tiers            # Tables 5 and 6, days (TIER_ONLY='T0|d1w1|T1' for the excerpt rows)
+LANES=3 test/reproduce.sh tiers            # Tables 10 and 11, days (TIER_ONLY='T0|d1w1|T1' for the excerpt rows)
 test/reproduce.sh tables
 ```
+
+`python3 test/reproduce_tables.py released` prints the same tables from the
+records released in this repository, without running anything. The scripts
+cover Tables 1 to 3, 8 to 11, 15 and 17 to 19 of the paper.
 
 Each lane holds about 8 GB; every stage is chunked and resumable, and a
 pair that stalls a chunk is set aside and reported. The scripts run the
 evaluator with its per-pair time limit off (`--timeout 0`), as the paper's
 runs did; with the default 20-second limit, ten of the 266 pairs the search
-accepts on the equivalent set would report `Timeout` instead. The ProofNetVerif
+accepts on the equivalent pairs of the certification set would report `Timeout` instead. The ProofNetVerif
 statements themselves are not redistributed; `test/pnv_fetch.py` rebuilds
 the pair files from the public dataset under the ids used here. The BEq+
 rows come from our port of its released implementation, which is not part

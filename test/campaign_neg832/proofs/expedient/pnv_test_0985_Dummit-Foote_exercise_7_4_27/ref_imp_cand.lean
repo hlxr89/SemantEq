@@ -1,0 +1,20 @@
+import Mathlib
+
+open Fintype Subgroup Set Polynomial Ideal
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem exercise_7_4_27_assumed {R : Type*} [CommRing R] (hR : (0 : R) ≠ 1)
+  {a : R} (ha : IsNilpotent a) (b : R) :
+  IsUnit (1-a*b) := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem dummy {R : Type u} [CommRing R] {a b : R} (ha : IsNilpotent a) : IsUnit (1 - a * b) := by
+  apply IsNilpotent.isUnit_one_sub
+  rcases ha with ⟨n, hn⟩
+  use n
+  rw [mul_pow, hn, zero_mul]

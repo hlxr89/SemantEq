@@ -9,7 +9,7 @@ the from-scratch reproduction needs, in the id scheme used throughout this repos
 
 Also derived from the test split, when present:
     test/data/ablation_pnv.jsonl     the 50 ProofNetVerif pairs of the ablation set (ids from test/results)
-    test/data/equivalent_set.jsonl   the 407 pairs of the equivalent set: 369 test pairs + the 38 recall pairs
+    test/data/equivalent_set.jsonl   the 407 equivalent pairs of the certification set: 369 test pairs + the 38 recall pairs
 
 Requires the `datasets` package (pip install datasets). Downloads are cached by Hugging Face
 under $HF_HOME (default ~/.cache/huggingface).
@@ -61,7 +61,7 @@ def main():
         for i in abl:
             if i in by_id: f.write(json.dumps(by_id[i], ensure_ascii=False) + "\n"); n += 1
     print(f"wrote {n} of {len(abl)} ablation-set ProofNetVerif pairs", file=sys.stderr)
-    # the equivalent set: the 369 adjudicated-equivalent test pairs + the recall suite's 38 equivalent pairs
+    # the equivalent pairs of the certification set: the 369 adjudicated-equivalent test pairs + the recall suite's 38 equivalent pairs
     cap = [r["id"] for r in jl(HERE / "results" / "capability_verdicts.jsonl")]
     rec = {r["id"]: r for r in jl(HERE / "eval" / "recall" / "suite.jsonl")}
     with (a.outdir / "equivalent_set.jsonl").open("w") as f:
