@@ -1,0 +1,19 @@
+import Mathlib
+
+open Filter Set TopologicalSpace
+open scoped Topology
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem dummy_assumed {X : Type*} [TopologicalSpace X] {A : Set X} {x : X} (hA : IsClosed A) (hxA : x ∈ closure A) (hxXA : x ∉ A) (h : ∀ {U V : Set X}, IsOpen U → IsOpen V → x ∈ U ∩ V → (U ∩ A).Nonempty → (V ∩ Aᶜ).Nonempty → Set.Nonempty (U ∩ V ∩ frontier A)) : x ∈ frontier A := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem exercise_23_6 {X : Type*}
+  [TopologicalSpace X] {A C : Set X} (hc : IsConnected C)
+  (hCA : C ∩ A ≠ ∅) (hCXA : C ∩ Aᶜ ≠ ∅) :
+  C ∩ (frontier A) ≠ ∅ := by
+  -- not proved: the assumed theorem has an inconsistent antecedent and therefore supplies no connected-set frontier witness
+  sorry

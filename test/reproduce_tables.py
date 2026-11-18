@@ -6,15 +6,22 @@ computed from that. The only rows taken from test/results/ are the BEq+ rows, si
 its released implementation is not part of this repository; they are marked as such.
 
     python3 test/reproduce_tables.py test/reproduce_out
+    python3 test/reproduce_tables.py released
 
-Table 3 charges a pair the running time of the first configuration that accepted it, and an
-unaccepted pair its re-run time at the configuration (or the configuration's mean re-run time
-when it was not re-run), as in the paper.
+With `released` nothing is run and nothing is written: the tables are computed from the records
+released in this repository, test/results/ and the manifests of test/campaign/,
+test/campaign_neg832/ and test/semanteq_verif/.
+
+The search-strength tables charge a pair the running time of the first configuration that
+accepted it, and an unaccepted pair its re-run time at the configuration (or the configuration's
+mean re-run time when it was not re-run), as in the paper.
 """
 import json, os, re, sys, statistics, collections
 HERE = os.path.dirname(os.path.abspath(__file__))
+RELEASED = len(sys.argv) > 1 and sys.argv[1] == 'released'
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, 'reproduce_out')
-RES = os.path.join(OUT, 'results'); os.makedirs(RES, exist_ok=True)
+RES = os.path.join(HERE, 'results') if RELEASED else os.path.join(OUT, 'results')
+if not RELEASED: os.makedirs(RES, exist_ok=True)
 ACCEPT = {"EquivalentRestricted", "ExactMatch", "DefEq"}
 BAD = {"CandidateCompileError", "BothCompileError", "ReferenceCompileError"}
 def jl(p):
@@ -72,7 +79,7 @@ def table3():
     meta = json.load(open(os.path.join(RES, 'capability_meta.json')))
     tiers = meta['tiers']
     ids = [r['id'] for r in rows]; N = len(ids)
-    print(f"\nTables 5 and 6 — search strength on the {N} pairs of the equivalent set")
+    print(f"\nTables 10 and 11 — search strength on the {N} equivalent pairs of the certification set")
     print("  a pair keeps the cost of the tier that first accepted it; an unaccepted pair is charged its")
     print("  re-run time at the tier, or the tier's mean re-run time when it was not re-run")
     base = {r['id']: (r['base_elapsed_s'], r['base_accept']) for r in rows}
@@ -109,19 +116,89 @@ def table3():
         print(f"  {name:14s} {statistics.median(el):9.1f} {statistics.mean(el):8.1f} {max(el):8.0f} {sum(el)/3600:8.2f} {acc:8d} {100*acc/N:6.1f}%" + (f"   ({miss} pairs without a run, counted as rejected)" if miss else ""))
 
 CAMPAIGN_ORDER = ['expedient', 'unrestricted', 'faithful', 'rewrite']
-def campaign(status_key, title):
-    rows = list(jl(os.path.join(RES, 'campaign_manifest.jsonl')))
+DIRS = ('ref_imp_cand', 'cand_imp_ref')
+SETS = {'campaign': 'campaign', 'neg832': 'campaign_neg832', 'verif': 'semanteq_verif'}   # record prefix -> folder
+def manifest(name):
+    """One row per pair with the checker's verdicts: the released manifest, or the one distilled from fresh records."""
+    p = os.path.join(HERE, SETS[name], 'manifest.jsonl') if RELEASED else os.path.join(RES, f'{name}_manifest.jsonl')
+    return list(jl(p))
+def certified(key):          # directions the checker certifies (key: status = default policy, strict_status = stricter)
+    return lambda r, s: sum(1 for d in DIRS if r[s][d].get(key) == 'accepted')
+def written(r, s):           # directions whose proof compiled when the model wrote it
+    return sum(1 for d in DIRS if r[s][d].get('compiled_when_written', r[s][d].get('status') in ('accepted', 'rejected', 'error')))
+def compiles(r, s):          # directions whose proof compiles on this toolchain
+    return sum(1 for d in DIRS if r[s][d].get('status') in ('accepted', 'rejected'))
+def head(title):
     print(f"\n{title}")
-    print(f"  {'style':13s} {'equivalent both/one/neither':>30s} {'non-equivalent both/one/neither':>34s}")
+    print(f"  {'':28s} " + " ".join(f"{x:>8s}" for x in ('eq both', 'one', 'neither', 'neq both', 'one', 'neither')) + f"  {'P':>6s} {'R':>6s}")
+def line(name, rows, n, both_only=False):
+    c = collections.Counter((r['label'], n(r)) for r in rows)
+    pos = sum(1 for r in rows if r['label'] == 'equivalent')
+    tp, fp = c[('equivalent', 2)], c[('non_equivalent', 2)]
+    p, rc, _ = prf(tp, fp, pos - tp)
+    cells = [str(c[(lab, k)]) for lab in ('equivalent', 'non_equivalent') for k in (2, 1, 0)]
+    if both_only: cells = [cells[0], 'n/a', 'n/a', cells[3], 'n/a', 'n/a']
+    print(f"  {name:28s} " + " ".join(f"{x:>8s}" for x in cells) + (f"  {p:6.1f}" if tp + fp else f"  {'n/a':>6s}") + f" {rc:6.1f}")
+def styles(rows, n, prefix=''):
+    for s in CAMPAIGN_ORDER: line(prefix + s, rows, lambda r, s=s: n(r, s))
+
+def campaign_tables():
+    rows = manifest('campaign')
+    if not rows: return
+    head(f"Table 3, top panel — certification set ({len(rows)} pairs), default policy"); styles(rows, certified('status'))
+    head("Table 8, top panel — certification set, stricter policy"); styles(rows, certified('strict_status'))
+
+def full_split_tables():
+    first = [r for r in manifest('campaign') if r['source'] == 'ProofNetVerif test split']; rest = manifest('neg832')
+    if not first or not rest:
+        if not RELEASED: print("\nTables 15, 8 (bottom) and 9 need both the `campaign` and the `neg832` stage")
+        return
+    rows = first + rest
+    judged = list(jl(os.path.join(RES, 'pnv_test_verdicts.jsonl'))) or list(prior.values())
+    jr = [dict(label='equivalent' if r['adjudicated_equivalent'] else 'non_equivalent', beq=r.get('beqplus_v430_accept'),
+               n=2 if r['semanteq_accept'] else int(str(r['semanteq_verdict']).startswith('LikelyToo'))) for r in judged]
+    pos = sum(1 for r in rows if r['label'] == 'equivalent')
+    head(f"Table 15 — full ProofNetVerif test split, adjudicated labels ({pos} equivalent, {len(rows) - pos} non-equivalent pairs)")
+    line('BEq+ (from test/results)', jr, lambda r: 2 if r['beq'] else 0, both_only=True)
+    line('SemantEq-Eval', jr, lambda r: r['n'])
+    styles(rows, certified('status'))
+    head("Table 8, bottom panel — full test split, stricter policy"); styles(rows, certified('strict_status'))
+    pub = [dict(r, label='equivalent') for r in first] + rest
+    def pr(rs, n, s):
+        tp = sum(1 for r in rs if r['label'] == 'equivalent' and n(r, s) == 2); fp = sum(1 for r in rs if r['label'] != 'equivalent' and n(r, s) == 2)
+        return prf(tp, fp, sum(1 for r in rs if r['label'] == 'equivalent') - tp)
+    print(f"\nTable 9 — full test split under the published labels ({len(first)} equivalent, {len(rest)} non-equivalent pairs)")
+    print(f"  {'':13s} {'prover alone P':>15s} {'P default / strict':>20s} {'R default / strict':>20s} {'prover alone P, adjudicated':>29s}")
     for s in CAMPAIGN_ORDER:
-        out = []
-        for lab in ('equivalent', 'non_equivalent'):
-            c = collections.Counter()
-            for r in rows:
-                if r['label'] != lab: continue
-                n = sum(1 for d in ('ref_imp_cand', 'cand_imp_ref') if r[s][d].get(status_key) == 'accepted'); c[n] += 1
-            out.append(f"{c[2]}/{c[1]}/{c[0]}")
-        print(f"  {s:13s} {out[0]:>30s} {out[1]:>34s}")
+        a, d, st, adj = pr(pub, written, s), pr(pub, certified('status'), s), pr(pub, certified('strict_status'), s), pr(rows, written, s)
+        print(f"  {s:13s} {a[0]:15.1f} {d[0]:11.1f} / {st[0]:5.1f} {d[1]:12.1f} / {st[1]:5.1f} {adj[0]:29.1f}")
+
+def verif_tables():
+    rows = manifest('verif')
+    judged = list(jl(os.path.join(RES, 'semanteq_verif_verdicts.jsonl'))) or list(jl(os.path.join(HERE, 'results', 'semanteq_verif_verdicts.jsonl')))
+    if judged:
+        print(f"\nTable 1, second section — SemantEq-Verif, {len(judged)} pairs")
+        print(f"  {'system':12s} {'TP':>4s} {'FP':>4s} {'FN':>4s} {'TN':>5s} {'P':>6s} {'R':>6s} {'F1':>6s}")
+        for sys_name, acc in (('Ours', 'semanteq_accept'), ('BEq+ v4.30', 'beqplus_v430_accept')):
+            tp = sum(1 for r in judged if r[acc] and r['correct']); fp = sum(1 for r in judged if r[acc] and not r['correct'])
+            fn = sum(1 for r in judged if not r[acc] and r['correct']); tn = len(judged) - tp - fp - fn
+            p, rc, f = prf(tp, fp, fn)
+            print(f"  {sys_name:12s} {tp:4d} {fp:4d} {fn:4d} {tn:5d} {p:6.1f} {rc:6.1f} {f:6.1f}")
+    if not rows: return
+    for title, parts in (("Table 17 (its first two groups are the bottom panel of Table 3) — SemantEq-Verif, all pairs", None),
+                         ("Table 18 — SemantEq-Verif, IMO and Putnam part", ('IMO', 'Putnam')), ("Table 19 — SemantEq-Verif, Erdős part", ('Erdős',))):
+        sub = [r for r in rows if parts is None or r['source'] in parts]
+        jr = [dict(label='equivalent' if r['correct'] else 'non_equivalent', beq=r['beqplus_v430_accept'], n=r['semanteq_directions'])
+              for r in judged if parts is None or r['part'] in parts]
+        pos = sum(1 for r in sub if r['label'] == 'equivalent')
+        head(f"{title} ({pos} equivalent, {len(sub) - pos} non-equivalent)")
+        if jr:
+            line('BEq+ (from test/results)', jr, lambda r: 2 if r['beq'] else 0, both_only=True)
+            line('SemantEq-Eval', jr, lambda r: r['n'])
+        styles(sub, certified('status'), 'default, '); styles(sub, certified('strict_status'), 'stricter, '); styles(sub, compiles, 'prover alone, ')
+
+if RELEASED:
+    table1(); table2(); table3(); campaign_tables(); full_split_tables(); verif_tables(); sys.exit(0)
 
 # ------------------------------------------- distil the raw records to one line per pair
 # Table 1
@@ -155,7 +232,7 @@ if any(arm.values()):
     open(os.path.join(RES, 'ablation_verdicts.jsonl'), 'w').write('\n'.join(json.dumps(r) for r in rows) + '\n')
     made.append(f"Table 2: {len(rows)} pairs, arms present: {[a for a in ARM_NAMES if arm[a]]}" + (" (BEq+ rows from test/results)" if prior_abl else ""))
 
-# Table 3
+# Tables 10 and 11
 meta = json.load(open(os.path.join(HERE, 'results', 'capability_meta.json')))
 tier = {tag: recs(os.path.join(OUT, f'tier_{tag}.jsonl')) for tag, _ in meta['tiers']}
 if tier.get('T0'):
@@ -173,40 +250,67 @@ if tier.get('T0'):
         rows.append(row)
     open(os.path.join(RES, 'capability_verdicts.jsonl'), 'w').write('\n'.join(json.dumps(r) for r in rows) + '\n')
     json.dump(meta, open(os.path.join(RES, 'capability_meta.json'), 'w'), indent=1)
-    made.append(f"Tables 5/6: {len(rows)} pairs, tiers present: {[t for t, _ in meta['tiers'] if tier[t]]}" + (" (BEq+ rows from test/results)" if prior_cap else ""))
+    made.append(f"Tables 10/11: {len(rows)} pairs, tiers present: {[t for t, _ in meta['tiers'] if tier[t]]}" + (" (BEq+ rows from test/results)" if prior_cap else ""))
 
-# Tables 4 and 5
+# The model-proof tables: one manifest per proof set, in the schema of the released ones
 STATUS = {'PASS': 'accepted', 'FAIL': 'rejected', 'SKIP_SORRY': 'skipped', 'ERROR': 'error'}
-man = [json.loads(l) for l in open(os.path.join(HERE, 'campaign', 'manifest.jsonl')) if l.strip()]
 STYLES = ['unrestricted', 'faithful', 'rewrite', 'expedient']
-got = {}
-for s in STYLES:
-    for mode, suf, key in (('default', '', 'status'), ('strict', '_strict', 'strict_status')):
-        for o in jl(os.path.join(OUT, f'campaign_{s}{suf}.jsonl')):
-            m = re.search(r'proofs/[^/]+/([^/]+)/+(ref_imp_cand|cand_imp_ref)\.lean$', o.get('file', ''))
-            if m: got[(s, m.group(1), m.group(2), key)] = STATUS.get(o.get('verdict'), 'error')
-if got:
-    rows = []; complete = 0
+def distil(name, keep=()):
+    """Fresh checker records of one proof set -> <out>/results/<name>_manifest.jsonl. `keep` names the fields
+    copied from the released manifest because a re-run cannot produce them."""
+    man = list(jl(os.path.join(HERE, SETS[name], 'manifest.jsonl')))
+    got = {}
+    for s in STYLES:
+        for suf, key in (('', 'status'), ('_strict', 'strict_status')):
+            for o in jl(os.path.join(OUT, f'{name}_{s}{suf}.jsonl')):
+                m = re.search(r'proofs/[^/]+/([^/]+)/+(ref_imp_cand|cand_imp_ref)\.lean$', o.get('file', ''))
+                if m: got[(s, m.group(1), m.group(2), key)] = STATUS.get(o.get('verdict'), 'error')
+    if not got: return False
+    rows = []; complete = withheld = 0
     for r in man:
         row = {'pair': r['pair'], 'label': r['label'], 'source': r['source']}; ok = True
         for s in STYLES:
             row[s] = {}
-            for d in ('ref_imp_cand', 'cand_imp_ref'):
-                e = {}
-                for key in ('status', 'strict_status'):
-                    v = got.get((s, r['pair'], d, key))
-                    if v is None: ok = False
-                    else: e[key] = v
+            for d in DIRS:
+                if r.get('proofs_released') is False:      # proofs not redistributed: the released verdicts stand
+                    e = {k: r[s][d][k] for k in ('status', 'strict_status')}
+                else:
+                    e = {}
+                    for key in ('status', 'strict_status'):
+                        v = got.get((s, r['pair'], d, key))
+                        if v is None: ok = False
+                        else: e[key] = v
+                for k in keep:
+                    if k in r[s][d]: e[k] = r[s][d][k]
                 row[s][d] = e
-        complete += ok; rows.append(row)
-    open(os.path.join(RES, 'campaign_manifest.jsonl'), 'w').write('\n'.join(json.dumps(r, ensure_ascii=False) for r in rows) + '\n')
-    made.append(f"Tables 3/4: {complete} of {len(rows)} pairs complete in every style and mode (others counted as not accepted)")
+        withheld += r.get('proofs_released') is False; complete += ok; rows.append(row)
+    open(os.path.join(RES, f'{name}_manifest.jsonl'), 'w').write('\n'.join(json.dumps(r, ensure_ascii=False) for r in rows) + '\n')
+    made.append(f"proof set {SETS[name]}: {complete} of {len(rows)} pairs complete in every style and mode (others counted as not accepted)"
+                + (f"; {withheld} pairs without redistributed proofs keep their released verdicts" if withheld else ""))
+    return True
+got = distil('campaign')
+got_neg = distil('neg832', keep=('compiled_when_written',))
+got_verif = distil('verif')
+
+# SemantEq-Verif, the two judges
+verif_eval = recs(os.path.join(OUT, 'verif_eval.jsonl'))
+if verif_eval:
+    rel = {r['id']: r for r in jl(os.path.join(HERE, 'results', 'semanteq_verif_verdicts.jsonl'))}
+    rows = []; kept = 0
+    for i, r in rel.items():
+        o = verif_eval.get(i)
+        if o is None: rows.append(r); kept += 1; continue        # not run here (candidate not fetched, or set aside)
+        v = o.get('verdict'); n = 2 if v in ('ExactMatch', 'DefEq') else sum(1 for d in (o.get('directions') or {}).values() if d.get('closed'))
+        rows.append(dict(id=i, part=r['part'], correct=r['correct'], semanteq_verdict=v, semanteq_directions=n,
+                         semanteq_accept=v in ACCEPT, beqplus_v430_accept=r['beqplus_v430_accept']))
+    open(os.path.join(RES, 'semanteq_verif_verdicts.jsonl'), 'w').write('\n'.join(json.dumps(r, ensure_ascii=False) for r in rows) + '\n')
+    made.append(f"SemantEq-Verif: {len(rows) - kept} pairs from fresh runs (BEq+ column from test/results)" + (f"; {kept} pairs not run here keep their released verdict" if kept else ""))
 
 print("fresh verdict tables in", RES); [print("  " + m) for m in made]
 if not made: print("  nothing found under", OUT); sys.exit(0)
 if pnv: table1()
 if any(arm.values()): table2()
 if tier.get('T0'): table3()
-if got:
-    campaign('status', "Table 3 — model-written proofs, default mode (pairs both/one/neither)")
-    campaign('strict_status', "Table 4 — model-written proofs, strict mode (pairs both/one/neither)")
+if got: campaign_tables()
+if got or got_neg: full_split_tables()
+if got_verif or verif_eval: verif_tables()

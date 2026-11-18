@@ -16,12 +16,12 @@ add `--raw` for the full JSON record.
 | `D2_usamo_1996_p1_two_bridges/` | Appendix D | two bridges; needs --depth 2 |
 | `E1_beqplus_dummit_foote_1_1_4/` | Appendix E | BEq+ false positive; must be rejected |
 | `E2_beqplus_rudin_2_19a/` | Appendix E | BEq+ false positive; must be rejected |
-| `F1_ex_falso_pair/` | Appendix F | ex falso audit; rejected both ways |
-| `F2_relevance_pair/` | Appendix F | relevance audit; LikelyTooStrong |
-| `J1_rudin_1_4_foreign_structure/` | Appendix J | model proof refused (cand_imp_ref) |
-| `J2_munkres_22_5_foreign_object/` | Appendix J | model proof refused (cand_imp_ref) |
-| `J3_artin_2_8_6_antecedent_unused/` | Appendix J | model proof refused (ref_imp_cand) |
-| `J4_imo_1983_p1_checker_loop/` | Appendix J | checker-in-the-loop overturns a label (pair ruled non-equivalent) |
+| `G1_ex_falso_pair/` | Appendix G | ex falso audit; rejected both ways |
+| `G2_relevance_pair/` | Appendix G | relevance audit; LikelyTooStrong |
+| `K1_rudin_1_4_foreign_structure/` | Appendix K | model proof refused (cand_imp_ref) |
+| `K2_munkres_22_5_foreign_object/` | Appendix K | model proof refused (cand_imp_ref) |
+| `K3_artin_2_8_6_antecedent_unused/` | Appendix K | model proof refused (ref_imp_cand) |
+| `K4_imo_1983_p1_checker_loop/` | Appendix K | checker-in-the-loop overturns a label (pair ruled non-equivalent) |
 
-The campaign proofs (H1–H3) are verbatim model output from the four-style
+The campaign proofs (K1–K4) are verbatim model output from the four-style
 campaign; the pair statements are verbatim benchmark or suite entries.

@@ -1,0 +1,20 @@
+import Mathlib
+
+open Function Fintype Subgroup Ideal Polynomial Submodule Zsqrtd
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem exercise_11_4_6c_assumed : Irreducible (X^3 - 9 : Polynomial (ZMod 31)) := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem dummy : Irreducible (Polynomial.X^3 - 9 : Polynomial ℤ) := by
+  letI : Fact (Nat.Prime 31) := ⟨by norm_num⟩
+  apply Monic.irreducible_of_irreducible_map
+    (φ := Int.castRingHom (ZMod 31))
+    (f := (Polynomial.X^3 - 9 : Polynomial ℤ))
+  · simpa using monic_X_pow_sub_C (R := ℤ) 9 (by decide : 3 ≠ 0)
+  simpa using exercise_11_4_6c_assumed

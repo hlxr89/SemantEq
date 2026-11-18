@@ -8,7 +8,7 @@ lake build semanteq >/dev/null
 for s in $SUITES; do
   D=test/eval/$s
   echo "== $s ($(grep -c . $D/suite.jsonl) pairs) =="
-  lake env .lake/build/bin/semanteq "$D/suite.jsonl" "$D/results.jsonl" >/dev/null
+  lake env .lake/build/bin/semanteq --timeout 0 "$D/suite.jsonl" "$D/results.jsonl" >/dev/null
   python3 - "$D" <<'PY'
 import json, sys
 d=sys.argv[1]

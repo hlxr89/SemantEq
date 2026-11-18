@@ -1,0 +1,23 @@
+import Mathlib
+
+open Real
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem dummy_assumed {p : ℕ} [Fact (Nat.Prime p)] (hp1 : p = 4*t + 1) : IsPrimitiveRoot (-((4*t + 1 : ℕ) : ℤ)) p ↔ IsPrimitiveRoot ((4*t + 1 : ℕ) : ℤ) p := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem exercise_4_4 {p t: ℕ} (hp0 : p.Prime) (hp1 : p = 4*t + 1)
+  (a : ZMod p) :
+  IsPrimitiveRoot a p ↔ IsPrimitiveRoot (-a) p := by
+  letI : Fact (Nat.Prime p) := ⟨hp0⟩
+  constructor <;> intro h
+  all_goals
+    exfalso
+    have hb : _ = (1 : ZMod p) := (ZMod.pow_card _).symm.trans h.pow_eq_one
+    have hp : p ∣ 1 := h.dvd_of_pow_eq_one 1 (by simp [hb])
+    exact hp0.not_dvd_one hp

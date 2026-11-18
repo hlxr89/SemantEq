@@ -1,46 +1,35 @@
-import SemantEq.RestrictedSearch
 import SemantEq.Statement
-import SemantEq.Env
+import SemantEq.Config
 
 /-!
 # The structure-repackaging arm
 
-For pairs whose preambles declare DIFFERENT-but-isomorphic structures — the
-case the shared-preamble paths rightly refuse to share — the honest bridge is the probe-B
-move: rebuild each side's structure values from the other side's fields,
-apply the antecedent to the repackaged hypotheses, and rebuild the
-conclusion. This module mechanizes that move at three grades :
+For pairs whose preambles declare different but isomorphic structures (the
+case the shared-preamble paths cannot share), the bridge is to rebuild each
+side's structure values from the other side's fields, apply the antecedent to
+the repackaged hypotheses, and rebuild the conclusion. The arm does this at
+three grades:
 
-* **A (defeq)** — a target field closes against ANY atom of the facts pool
-  by definitional equality. Fields are NOT matched by name: the pool is
-  every hypothesis, every structure field (parents recursed), and every
-  ∧-component, flattened (`flattenFact`) — so renamed fields, re-grouped
-  conjunctions, and split/merged axioms all reduce to pool membership.
-* **∧/structure decomposition** — ∧-headed target fields split and recurse;
-  pair-local-structure-headed targets apply their constructor and fill each
-  field from the same pool, recursively (`extends`-parents are fields).
-* **B (single-lemma bridge)** — a field that survives all of the above gets
-  ONE audited rewrite: `Meta.Rewrites.findRewrites` (the rw?-index, lazy
-  module tree created at most once per arm invocation) proposes Eq/Iff
-  bridges against the FIELD type — which statement-level discovery can never
-  see, since field types live inside structure declarations — the goal is
-  rewritten once, and the pool is retried. Depth 1 by construction
-  (`allowRw := false` in the retry).
+* definitional: a target field closes against any atom of the facts pool,
+  which is every hypothesis, every structure field (parents recursed) and
+  every conjunct, flattened (`flattenFact`), so renamed fields, regrouped
+  conjunctions and split or merged axioms all reduce to pool membership;
+* decomposition: a conjunction splits and recurses; a pair-local structure
+  applies its constructor and fills each field from the same pool;
+* one bridge: a field that survives both gets one audited rewrite proposed by
+  the rewrite index against the field type, which statement-level discovery
+  never sees since field types live inside structure declarations; the goal
+  is rewritten once and the pool retried (depth one by construction).
 
-Data fields ride the same cascade: same-data fields close by defeq against
-the source projection (D1); defaulted fields are ordinary constructor goals
-filled the same way (D2). Genuinely new data (D3) is out of scope — such a
-field fails and the arm declines, honestly.
-
-Self-containment: the arm no-ops instantly unless a pair-local structure
-constant (under `SemantEqRef`/`SemantEqCand`) occurs in the goal or the
-antecedent's statement — possible only for declaring-preamble pairs. Audits
-are the caller's job, unchanged: the proof term (constructors, projections,
-∧-plumbing, Eq/Iff-grade bridge lemmas) flows through the standard stack.
+Data fields follow the same cascade: a same-data field closes by definitional
+equality against the source projection, a defaulted field is an ordinary
+constructor goal. Genuinely new data is out of scope; such a field fails and
+the arm declines. The arm is a no-op unless a pair-local structure constant
+occurs in the goal or in the antecedent's statement. Audits are the caller's
+job: the proof term flows through the standard chain.
 -/
 
 namespace SemantEq
-
 open Lean Meta
 
 /-- Swap a pair-local name to its opposite-namespace counterpart. -/
@@ -51,7 +40,7 @@ def crossName? (n : Name) : Option Name :=
     some (n.replacePrefix candNamespace refNamespace)
   else none
 
-/-- Is `n` a pair-local STRUCTURE constant? -/
+/-- Is `n` a pair-local structure constant? -/
 def isPairLocalStruct (env : Environment) (n : Name) : Bool :=
   (refNamespace.isPrefixOf n || candNamespace.isPrefixOf n)
     && (getStructureInfo? env n).isSome
@@ -60,11 +49,11 @@ def isPairLocalStruct (env : Environment) (n : Name) : Bool :=
 def mentionsPairLocalStruct (env : Environment) (e : Expr) : Bool :=
   (e.getUsedConstants.filter (isPairLocalStruct env)).size > 0
 
-/-- Flatten a fact into its usable atoms: the fact itself; both components
-of an ∧ (recursively); every field of a pair-local structure value
-(parents recursed via their subobject projections). The result is the
-"facts pool" — target fields close against ANY atom, so field names,
-grouping, and structure nesting on the source side stop mattering. -/
+/-- Flatten a fact into its usable atoms: the fact itself, both components of
+a conjunction (recursively), every field of a pair-local structure value
+(parents recursed through their subobject projections). The result is the
+facts pool: target fields close against any atom, so field names, grouping
+and structure nesting on the source side stop mattering. -/
 partial def flattenFact (f : Expr) : MetaM (Array Expr) := do
   let ty ← whnf (← inferType f)
   let mut out := #[f]
@@ -83,9 +72,9 @@ partial def flattenFact (f : Expr) : MetaM (Array Expr) := do
           out := out ++ (← flattenFact proj)
   return out
 
-/-- Is `ty` headed by a pair-local structure that HAS a counterpart in the
-opposite namespace? Returns the twin's type when so — the only shape for
-which opening a binder buys anything (see `fillGoal`'s intro case). -/
+/-- Is `ty` headed by a pair-local structure that has a counterpart in the
+opposite namespace? Returns the twin's type when so, the only shape for which
+opening a binder buys anything (see `fillGoal`'s intro case). -/
 def twinTypeOf? (env : Environment) (ty : Expr) : Option Expr :=
   match ty.getAppFn with
   | .const sn us =>
@@ -116,17 +105,11 @@ partial def fillGoal (probe : MVarId → MetaM (List Meta.Rewrites.RewriteResult
       catch _ => pure false
     if hit then return true
     restoreState s'
-  -- (1.5) TARGETED intro : open a binder ONLY when
-  -- its domain is a pair-local structure with a counterpart — i.e. because it
-  -- HIDES twinnable material, never as a general habit. Blanket intro is what
-  -- the ladder's two intro depths (`introsToFirstPropHyp` vs full `intros`)
-  -- exist to avoid: stripping a goal can destroy the very shape another arm
-  -- needs. Here the purpose is specific — twinning needs a TERM to project
-  -- from, and a structure binder nested under `∧`/a constructor field is
-  -- unreachable from `repackagingClose`'s single root-level `intros`.
-  -- Tested on the UN-whnf'd type: `¬A` / `a ≠ b` whnf to `_ → False`, and
-  -- those must not become intro targets. Bounded by the number of structure
-  -- binders (each intro strictly consumes one), not by fuel.
+  -- (1.5) targeted intro: open a binder only when its domain is a pair-local
+  -- structure with a counterpart, since twinning needs a term to project from
+  -- and such a binder may sit under a conjunct or a constructor field. Tested
+  -- on the un-whnf'd type: `¬A` and `a ≠ b` must not become intro targets.
+  -- Each intro consumes one structure binder, which bounds the recursion.
   let rawTgt ← instantiateMVars (← g.getType)
   if rawTgt.isForall then
     if let some twinTy := twinTypeOf? (← getEnv) rawTgt.bindingDomain! then
@@ -168,17 +151,12 @@ partial def fillGoal (probe : MVarId → MetaM (List Meta.Rewrites.RewriteResult
         catch _ => pure false
       if ok then return true
       restoreState s
-  -- (4) B-level: ONE bridge lemma from the rw?-index, then retry 1–3.
-  -- Tried as a single-lemma `simp only` FIRST — field types are typically
-  -- ∀-quantified and their redexes sit under binders, where `rw` cannot
-  -- reach — with the plain `rw` shape as fallback for non-simp-orientable
-  -- rewrites. Depth 1 by construction (`allowRw := false` in the retry).
+  -- (4) one bridge lemma from the rewrite index, then retry 1–3: as a
+  -- single-lemma `simp only` first (field types are usually quantified, their
+  -- redexes under binders where `rw` cannot reach), then as a plain `rw`
   if allowRw then
-    -- δ-unfold pair-local defs in the goal first (pure defeq replacement):
-    -- differing local defs appear as FOLDED constant applications in field
-    -- types, hiding the redexes the bridge lemma must match from the
-    -- rw?-probe (observed: the diff-natpast pair — `natPast B s` folds the
-    -- `⨆` the iSup-family lemma rewrites).
+    -- unfold pair-local definitions in the goal first: a differing local
+    -- definition hides the redex the bridge lemma must match
     let g ← try
         let tgt ← g.getType
         let tgtU ← Meta.deltaExpand tgt fun n =>
@@ -210,22 +188,22 @@ partial def fillGoal (probe : MVarId → MetaM (List Meta.Rewrites.RewriteResult
   restoreState s
   return false
 
-/-- The repackaging arm. Builds a proof of `goalType` from `ante` when the
-gap between the two sides is (possibly nested, re-grouped, or
-single-rewrite-bridged) pair-local structures. Returns the elaborated
-proof; audits are the caller's job — same contract as every native arm. -/
+/-- The repackaging arm. Builds a proof of `goalType` from `ante` when the gap
+between the two sides is pair-local structures (possibly nested, regrouped or
+one rewrite apart). Returns the elaborated proof; audits are the caller's
+job, the same contract as every other arm. -/
 def repackagingClose (ante : Name) (goalType : Expr) (forbid : NameSet := {})
     : MetaM (Option Expr) := do
   let env ← getEnv
   let some anteInfo := env.find? ante | return none
   unless mentionsPairLocalStruct env goalType
       || mentionsPairLocalStruct env anteInfo.type do return none
-  let trace := (← envVar "TRACE").isSome
+  let trace := (← getConfig).trace
   if trace then IO.eprintln "[repack] gate passed"
   let s ← saveState
   try
-    -- lazy rw?-module tree: one per arm invocation, queried only by fields
-    -- that reach the B-level bridge; forbid mirrors discovery's set
+    -- lazy rewrite-index tree: one per arm invocation, queried only by fields
+    -- that reach the bridge grade; `forbid` mirrors discovery's set
     let tree ← Meta.Rewrites.createModuleTreeRef
     let probe (g : MVarId) : MetaM (List Meta.Rewrites.RewriteResult) := do
       g.withContext do
@@ -274,9 +252,8 @@ def repackagingClose (ante : Name) (goalType : Expr) (forbid : NameSet := {})
     restoreState s
     return some proof
   catch e =>
-    if (← envVar "TRACE").isSome then
+    if (← getConfig).trace then
       IO.eprintln s!"[repack] exception: {← e.toMessageData.toString}"
     restoreState s
     return none
-
 end SemantEq

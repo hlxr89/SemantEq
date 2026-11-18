@@ -7,25 +7,34 @@
 #   test/reproduce.sh corpus      proof-audit corpus, default and strict mode        (~10 min)
 #   test/reproduce.sh suites      recall suite + the constructed half of the ablation set (~30 min)
 #   test/reproduce.sh ablation    the six ablation arms -> Table 2                     (~2 h; +6 h with the ProofNetVerif half)
-#   test/reproduce.sh campaign    the checker over the campaign proofs -> Tables 3, 4  (~4 h, ~1.5 h with LANES=3)
+#   test/reproduce.sh campaign    the checker over the campaign proofs -> top panels of Tables 3 and 8 (~4 h, ~1.5 h with LANES=3)
+#   test/reproduce.sh neg832      the checker over the proofs for the rest of the test split -> Tables 15, 8 (bottom), 9
+#   test/reproduce.sh verif       SemantEq-Eval and the checker over SemantEq-Verif -> Tables 1 (second section), 3 (bottom), 17 to 19
 #   test/reproduce.sh pnv         SemantEq-Eval over the ProofNetVerif test split -> Table 1 (~12 h, ~4 h with LANES=3)
-#   test/reproduce.sh tiers       the eleven search configurations over the equivalent set -> Tables 5, 6 (days; see below)
+#   test/reproduce.sh tiers       the eleven search configurations over the certification set's equivalent pairs -> Tables 10, 11 (days; see below)
 #   test/reproduce.sh tables      assemble the fresh verdict tables and print the paper's tables
+#
+# `python3 test/reproduce_tables.py released` prints the same tables from the records released in
+# this repository, without running anything.
 #
 # ProofNetVerif is not redistributed: `python3 test/pnv_fetch.py` downloads it and writes
 # test/data/{pnv_test.jsonl, ablation_pnv.jsonl, equivalent_set.jsonl}; the stages that need
 # them look there (override with PNV=, ABL_PNV=, EQSET=). The BEq+ rows of the tables come
 # from our port of its released implementation, which is not part of this repository; the
 # fresh tables print them from test/results when that file is present, marked as such.
+# SemantEq-Verif holds 38 candidates that are not redistributed either:
+# `python3 test/semanteq_verif/fetch_second_formalizations.py` writes the complete benchmark to
+# test/data/semanteq_verif.jsonl; without it the `verif` stage runs the other 188 pairs.
 #
 # Knobs: LANES=n runs n processes on disjoint chunks (each process holds ~8 GB with Mathlib);
 # CHUNK=n pairs per process (default 40); STALL_SECS=s kills a chunk whose output has not
 # grown for s seconds and sets its first unfinished pair aside (default 900); LIMIT=n runs
 # only the first n pairs of every input (smoke test). Every stage is resumable: a finished
-# chunk is skipped on re-run.
+# chunk is skipped on re-run. The evaluator runs with its per-pair time limit off
+# (--timeout 0), as the paper's runs did.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-STAGE="${1:-}"; [ -n "$STAGE" ] || { sed -n 2,22p "$0"; exit 1; }
+STAGE="${1:-}"; [ -n "$STAGE" ] || { sed -n 2,31p "$0"; exit 1; }
 OUT=test/reproduce_out; mkdir -p "$OUT"
 LANES="${LANES:-1}"; CHUNK="${CHUNK:-40}"; STALL_SECS="${STALL_SECS:-900}"; LIMIT="${LIMIT:-}"
 PNV="${PNV:-test/data/pnv_test.jsonl}"; ABL_PNV="${ABL_PNV:-test/data/ablation_pnv.jsonl}"; EQSET="${EQSET:-test/data/equivalent_set.jsonl}"
@@ -42,7 +51,7 @@ run_pairs () {
   local chunks=("$wd"/chunk_[0-9][0-9][0-9][0-9])
   run_chunk () { # one process per chunk; watchdog on the streamed stdout
     local c=$1; shift; [ -f "$c.out.jsonl" ] && return 0
-    ( env "$@" lake env "$BIN" --raw "$c" "$c.out.jsonl" > "$c.stream" 2> "$c.err" ) &
+    ( env "$@" lake env "$BIN" --raw --timeout 0 "$c" "$c.out.jsonl" > "$c.stream" 2> "$c.err" ) &
     local pid=$! last=0 same=0
     while kill -0 $pid 2>/dev/null; do
       sleep 15; local n; n=$(grep -c '"id"' "$c.stream" 2>/dev/null || echo 0)
@@ -87,13 +96,22 @@ case "$STAGE" in
     inputs=(test/eval/ablation/suite.jsonl); [ -f "$ABL_PNV" ] && inputs+=("$ABL_PNV") || echo "note: $ABL_PNV absent, constructed half only" >&2
     cat "${inputs[@]}" > "$OUT/ablation_input.jsonl"
     for a in "${ARMS[@]}"; do name=${a%%:*}; envs=${a#*:}; echo "== arm $name"; run_pairs "$OUT/ablation_input.jsonl" "$OUT/ablation_$name.jsonl" $envs; done ;;
-  campaign)
+  campaign|neg832|verif)
     # one checker process per lane and mode; a style whose output file exists is skipped
+    case "$STAGE" in campaign) SETDIR=test/campaign ;; neg832) SETDIR=test/campaign_neg832 ;; verif) SETDIR=test/semanteq_verif ;; esac
+    if [ "$STAGE" = verif ]; then
+      VERIF=test/data/semanteq_verif.jsonl
+      if [ ! -f "$VERIF" ]; then
+        echo "note: $VERIF absent (see test/semanteq_verif/fetch_second_formalizations.py); running the pairs with a released candidate" >&2
+        VERIF="$OUT/verif_input.jsonl"; grep -v '"candidate": null' test/semanteq_verif/pairs.jsonl > "$VERIF"
+      fi
+      run_pairs "$VERIF" "$OUT/verif_eval.jsonl"
+    fi
     for s in unrestricted faithful rewrite expedient; do
-      mapfile -t dirs < <(ls -d test/campaign/proofs/$s/* | sort); [ -n "$LIMIT" ] && dirs=("${dirs[@]:0:$LIMIT}")
+      mapfile -t dirs < <(ls -d $SETDIR/proofs/$s/* | sort); [ -n "$LIMIT" ] && dirs=("${dirs[@]:0:$LIMIT}")
       for mode in default strict; do
         if [ $mode = strict ]; then SFLAG=--strict; suf=_strict; else SFLAG=""; suf=""; fi
-        out="$OUT/campaign_$s$suf.jsonl"
+        out="$OUT/${STAGE}_$s$suf.jsonl"
         if [ -s "$out" ]; then echo "== $s $mode: $out present, skipped"; continue; fi
         wd="$out.lanes"; mkdir -p "$wd"; rm -f "$wd"/lane_*
         printf '%s\n' "${dirs[@]}" | split -n r/"$LANES" -d -a 2 - "$wd/lane_"

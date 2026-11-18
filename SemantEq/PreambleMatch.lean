@@ -2,57 +2,38 @@ import Lean
 import SemantEq.Statement
 
 /-!
-# Level-2 preamble matching (α-modulo-namespace, partial)
+# Partial preamble sharing
 
-Self-contained support for the shared-preamble context (fix (a), level 2).
-Level 1 (`Context.lean`) shares a preamble only when the two sides' CODE
-TOKENS are identical. This module implements the exact version of the same
-idea on the ELABORATED declarations: two preamble declarations are
-interchangeable copies iff they are α-equal after renaming the cand
-namespace prefix to the ref one — compared on the finished expression trees,
-so comments, whitespace, declaration order, and attribute placement are all
-invisible, and NOTHING is ever re-elaborated during matching.
+When the two preambles declare constants but are not code-identical, the
+declarations they have in common can still be shared. Two preamble
+declarations are interchangeable when they are α-equal after renaming the
+candidate namespace prefix to the reference one, compared on the elaborated
+expressions, so comments, whitespace, declaration order and attribute
+placement are invisible and nothing is re-elaborated during matching.
 
-Matching is name-keyed (`SemantEqCand.<ns>.X` ↔ `SemantEqRef.<ns>.X`;
-renamed declarations deliberately stay unmatched — for `def`s that costs
-nothing, they cross namespaces by δ-unfolding; renamed STRUCTURES are level-3
-territory) and runs to a FIXPOINT: a declaration matches only if every
-pair-local constant it references is itself matched, so the matched set is
-dependency-closed by construction (a remove-into-shared-list loop).
+Matching is keyed by name (`SemantEqCand.<ns>.X` against `SemantEqRef.<ns>.X`;
+renamed declarations stay unmatched) and runs to a fixpoint: a declaration
+matches only if every pair-local constant it references is itself matched, so
+the matched set is closed under dependencies. Prop-valued content is compared
+by type only (proof irrelevance); value-carrying definitions compare type and
+value; inductives compare the type and every constructor's type.
 
-Prop-valued content (theorem statements, `_proof_N` auxiliaries) is compared
-by TYPE only — proof irrelevance makes same-statement/different-proof copies
-interchangeable. Value-carrying defs compare type AND value; inductives
-compare type plus every constructor's type.
-
-The second half (`candRemainder`) builds the cand-side REMAINDER source: the
-cand preamble text with matched declarations deleted and `open` lines
-injected so bare references to matched names resolve to the shared (ref)
-copies. The ref side needs no surgery at all — its full preamble IS the
-shared block.
-
-Failure anywhere degrades to "no match" / `none`, and the caller falls back
-to the legacy two-namespace path — this module can shrink the wall, never
-add one.
+`candRemainder` then builds the candidate side's remainder source: the
+candidate preamble with the matched declarations deleted and `open` lines
+injected so bare references to matched names resolve to the shared
+(reference) copies. The reference side needs no change; its full preamble is
+the shared block. Any failure means "no match", and the caller falls back to
+one namespace per side.
 -/
 
 namespace SemantEq
-
 open Lean Meta
 
-/-- Names minted by the elaborator that never appear in source and are only
-meaningful for the matching verdict via the declarations that REFERENCE them
-(`_proof_N`, match auxiliaries, …). They participate in matching (a value
-referencing an unmatched auxiliary must fail honestly) but are never
-declaration CHUNKS of their own in the remainder builder. -/
-def isAuxDetail (n : Name) : Bool :=
-  n.isInternalDetail || n.hasMacroScopes
-
-/-- Rename every constant under `fromNs` whose STRIPPED name is in `matched`
+/-- Rename every constant under `fromNs` whose stripped name is in `matched`
 (plus `self`, for recursive occurrences of the declaration under test) to its
-`toNs` counterpart. Constants under `fromNs` NOT in the set are left alone —
-so a body referencing an unmatched pair-local constant fails its α-comparison
-against the ref body (which references the ref counterpart) honestly. -/
+`toNs` counterpart. Constants under `fromNs` not in the set are left alone, so
+a body referencing an unmatched pair-local constant fails its α-comparison
+against the reference body. -/
 def mapMatchedPrefix (fromNs toNs : Name) (matched : NameSet) (self : Name)
     (e : Expr) : Expr :=
   e.replace fun
@@ -66,18 +47,18 @@ def mapMatchedPrefix (fromNs toNs : Name) (matched : NameSet) (self : Name)
     | _ => none
 
 /-- α-comparison of two declaration expressions modulo the matched-set
-namespace mapping (annotations stripped, same as statement comparison). -/
+namespace mapping, annotations stripped as in statement comparison. -/
 def eqModuloNs (fromNs toNs : Name) (matched : NameSet) (self : Name)
     (cand ref : Expr) : Bool :=
   stripAnnotations (mapMatchedPrefix fromNs toNs matched self cand)
     == stripAnnotations ref
 
-/-- Does ONE cand declaration match its same-named ref counterpart, given the
-current matched set? Kind must agree; types always compare; values compare
-only for value-carrying non-Prop definitions (proof irrelevance covers
-theorems and Prop-valued auxiliaries); inductives additionally compare every
-constructor's type (field names AND order — reordered fields are genuinely
-different constructors and belong to level 3). -/
+/-- Does one candidate declaration match its same-named reference counterpart,
+given the current matched set? The kinds must agree; types always compare;
+values compare only for value-carrying non-Prop definitions (proof
+irrelevance covers theorems and Prop-valued auxiliaries); inductives
+additionally compare every constructor's type, field names and order
+included, since reordered fields are different constructors. -/
 def declMatches (env : Environment) (candNs refNs : Name) (matched : NameSet)
     (stripped : Name) : MetaM Bool := do
   let candName := candNs ++ stripped
@@ -116,11 +97,11 @@ def declMatches (env : Environment) (candNs refNs : Name) (matched : NameSet)
     return matched.contains stripped.getPrefix
   | _, _ => return false
 
-/-- The FIXPOINT matcher: all cand-namespace declarations of `env` (the
-throwaway environment holding BOTH elaborated preambles) that are
-interchangeable copies of their same-named ref counterparts. Sweeps until no
-new matches appear — matches enable matches, and the result is
-dependency-closed by construction. Returns the STRIPPED names. -/
+/-- The fixpoint matcher: all candidate-namespace declarations of `env` (a
+throwaway environment holding both elaborated preambles) that are
+interchangeable copies of their same-named reference counterparts. Sweeps
+until no new match appears, so the result is closed under dependencies.
+Returns the stripped names. -/
 def matchPreambles (env : Environment) (candNs refNs : Name)
     : MetaM NameSet := do
   -- collect candidate stripped names: local (map₂) constants under candNs
@@ -139,7 +120,7 @@ def matchPreambles (env : Environment) (candNs refNs : Name)
           grew := true
   return matched
 
-/-! ## The cand-side remainder builder -/
+/-! ## The candidate-side remainder builder -/
 
 /-- One parsed preamble command. -/
 structure PreChunk where
@@ -147,7 +128,7 @@ structure PreChunk where
   text : String
   /-- stripped declaration name (user-namespace path included) when this is a
   matchable declaration chunk; `none` for scope commands and for declarations
-  whose name cannot be read off the syntax (anonymous instances — those stay
+  whose name cannot be read off the syntax (anonymous instances; those stay
   in the remainder, a harmless per-side copy) -/
   name? : Option Name := none
   /-- `some N` when this command is `namespace N` (used for open-injection) -/
@@ -156,9 +137,9 @@ structure PreChunk where
   nsPop : Nat := 0
 
 /-- Parse a preamble into command chunks with declaration names qualified by
-the user-namespace path in force at each point. Pure parsing — nothing is
-elaborated; `env` only supplies the syntax tables (notations). `none` on any
-parse hiccup: the caller falls back to the legacy path. -/
+the user-namespace path in force at each point. Pure parsing: nothing is
+elaborated, and `env` only supplies the syntax tables (notations). `none` on
+any parse error; the caller then keeps one namespace per side. -/
 def chunkPreamble (env : Environment) (opts : Options) (pre : String)
     : IO (Option (Array PreChunk)) := do
   try
@@ -203,11 +184,12 @@ def chunkPreamble (env : Environment) (opts : Options) (pre : String)
   catch _ =>
     return none
 
-/-- Build the cand-side REMAINDER source: matched declaration chunks deleted,
-`open _root_.<refNs>.<path>` injected at the top and after every `namespace`
-command so bare references to matched (now shared) names resolve to the ref
-copies. Scope commands are all preserved verbatim, so the remainder
-elaborates exactly like the original preamble minus the shared content. -/
+/-- Build the candidate side's remainder source: matched declaration chunks
+deleted, `open _root_.<refNs>.<path>` injected at the top and after every
+`namespace` command so bare references to matched (now shared) names resolve
+to the reference copies. Scope commands are preserved verbatim, so the
+remainder elaborates exactly like the original preamble minus the shared
+content. -/
 def candRemainder (refNs : Name) (chunks : Array PreChunk)
     (matched : NameSet) : String := Id.run do
   let mut out := s!"open _root_.{refNs}\n"
@@ -229,5 +211,4 @@ def candRemainder (refNs : Name) (chunks : Array PreChunk)
         | top :: rest => nsPath := top; nsStack := rest
         | [] => pure ()
   return out
-
 end SemantEq

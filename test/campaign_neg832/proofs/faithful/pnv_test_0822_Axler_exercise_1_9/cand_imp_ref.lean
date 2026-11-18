@@ -1,0 +1,18 @@
+import Mathlib
+
+open Fintype Complex Polynomial LinearMap FiniteDimensional Module Module.End
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem dummy_assumed {R : Type*} {M : Type*} [Ring R] [AddCommGroup M] [Module R M] (X Y : Submodule R M) (hXY : X ≤ Y) : X ⊔ Y = Y := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem exercise_1_9 {F V : Type*} [AddCommGroup V] [Field F]
+  [Module F V] (U W : Submodule F V):
+  (∃ U' : Submodule F V, U'.carrier = ↑U ∪ ↑W) ↔ (U ≤ W ∨ W ≤ U) := by
+  -- not proved: the antecedent only restates that inclusion makes a supremum redundant and cannot supply the union-comparability characterization
+  sorry

@@ -1,8 +1,7 @@
 # SemantEq public test suites
 
 Self-contained, runnable evaluation data for the SemantEq evaluator and its
-ProofChecker. Everything here is a copy — the canonical development data lives
-outside this directory.
+ProofChecker.
 
 ## eval/ — statement-pair suites for the evaluator
 - `recall/` — 40 pairs of curated transformations and blind
@@ -24,10 +23,14 @@ statements). Run + score everything:
 
 ## Reproducing the paper's tables from scratch
 - `reproduce.sh` — re-runs the programs stage by stage (corpus, suites,
-  ablation, campaign, pnv, tiers); `reproduce.sh tables` then prints Tables 1
-  to 5 from the fresh records via `reproduce_tables.py`. `pnv_fetch.py`
+  ablation, campaign, neg832, verif, pnv, tiers); `reproduce.sh tables` then
+  prints the paper's Tables 1 to 3, 8 to 11, 15 and 17 to 19 from the fresh
+  records via `reproduce_tables.py`, and `reproduce_tables.py released` prints
+  them from the released records without running anything. `pnv_fetch.py`
   downloads ProofNetVerif and rebuilds its pair files under the ids used here.
   Runtimes and knobs are in the script header and in the top-level README.
+  The suites and the reproduction run the evaluator with `--timeout 0`, as
+  the paper's runs did.
 - `results/` — the per-pair record behind the paper's tables (one line per
   pair and run). The reproduction reads it only for the BEq+ rows, whose
   port is not part of this repository.
@@ -41,9 +44,22 @@ directions of non-equivalent pairs are expected to PASS: they are the honest
 direction of a one-directional pair (the `note` field of the manifest
 explains each); their pairs stay non-equivalent because the other direction
 fails. The Munkres 18.8b pair here is validation row 0402; the false
-acceptance of the paper's Appendix F is a different pair with the same
+acceptance of the paper's Appendix G is a different pair with the same
 exercise name, validation row 0006, which is not released. The expected verdicts hold in both modes (`STRICT=1` runs the
 strict reading).
 
     ./proofaudit/run_proofaudit.sh
     STRICT=1 ./proofaudit/run_proofaudit.sh
+
+## campaign/, campaign_neg832/ — model-written proofs on ProofNetVerif
+`campaign/` holds the proofs for the 511 pairs of the certification set (the
+471 test pairs that ProofNetVerif labels equivalent and the 40 recall pairs),
+`campaign_neg832/` those for the other 832 test pairs, so the two cover the
+full test split. Each has the statements, the proofs of both directions under
+four prompt styles, and a manifest with the checker's verdict on every proof.
+See their READMEs.
+
+## semanteq_verif/ — the SemantEq-Verif benchmark
+226 labelled pairs on IMO, Putnam and Erdős problems, with the model-written
+proofs and the checker's verdicts. Thirty-eight candidates are rebuilt by
+`semanteq_verif/fetch_second_formalizations.py`. See its README.

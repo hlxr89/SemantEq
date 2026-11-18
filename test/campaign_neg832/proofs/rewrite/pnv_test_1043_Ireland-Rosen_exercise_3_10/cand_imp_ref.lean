@@ -1,0 +1,17 @@
+import Mathlib
+
+open Real
+open scoped BigOperators
+
+-- ===== unified context (both sides' local defs, merged) =====
+-- empty
+
+-- ===== assumed statement (antecedent) =====
+theorem dummy_assumed {n : ℕ} (h0 : 2 ≤ n) (h1 : n ≠ 2) (hn : n ≠ 3) (hnp : ¬ n.Prime) : Nat.factorial n.pred % n = 0 ∨ Nat.factorial n.pred % n = 1 := by
+  sorry
+
+-- ===== goal statement, PROVED from the antecedent =====
+theorem exercise_3_10 {n : ℕ+} (hn0 : ¬ n.Prime) :
+  Nat.factorial (n-1) ≡ 0 [MOD n] ↔ n ≠ 4 := by
+  -- not proved: the antecedent is false at n = 4, so no genuine transport proof exists
+  sorry

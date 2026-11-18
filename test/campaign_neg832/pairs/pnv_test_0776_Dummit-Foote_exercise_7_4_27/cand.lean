@@ -1,0 +1,6 @@
+import Mathlib
+
+open Fintype Subgroup Set Polynomial Ideal
+open scoped BigOperators
+
+theorem dummy {R : Type*} [CommRing R] {a b : R} (ha : IsNilpotent a) (hb : b ≠ 0) : IsUnit (1 - a * b) := sorry
